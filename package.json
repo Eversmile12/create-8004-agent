@@ -1,0 +1,54 @@
+{
+    "name": "create-trustless-agent",
+    "version": "1.0.4",
+    "description": "CLI to scaffold ERC-8004 compliant AI agents with A2A, MCP, and x402 support",
+    "type": "module",
+    "bin": {
+        "create-trustless-agent": "dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsx src/index.ts",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "erc-8004",
+        "ai-agent",
+        "a2a",
+        "mcp",
+        "x402",
+        "ethereum",
+        "web3",
+        "scaffold",
+        "cli"
+    ],
+    "author": "",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/YOUR_USERNAME/YOUR_REPO.git"
+    },
+    "bugs": {
+        "url": "https://github.com/YOUR_USERNAME/YOUR_REPO/issues"
+    },
+    "homepage": "https://github.com/YOUR_USERNAME/YOUR_REPO#readme",
+    "dependencies": {
+        "chalk": "^5.3.0",
+        "inquirer": "^9.2.23",
+        "ora": "^8.0.1",
+        "viem": "^2.21.0"
+    },
+    "devDependencies": {
+        "@types/inquirer": "^9.0.7",
+        "@types/node": "^20.10.0",
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.0"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}

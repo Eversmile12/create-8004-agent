@@ -1,3 +1,4 @@
+export type X402Provider = "payai" | "4mica";
 export declare const CHAINS: {
     readonly "eth-mainnet": {
         readonly name: "Ethereum Mainnet";
@@ -6,6 +7,8 @@ export declare const CHAINS: {
         readonly scanPath: "mainnet";
         readonly x402Network: "eip155:1";
         readonly x402Supported: false;
+        readonly x402Providers: readonly [];
+        readonly x402DefaultProvider: null;
         readonly facilitatorUrl: null;
         readonly usdcAddress: null;
     };
@@ -16,6 +19,8 @@ export declare const CHAINS: {
         readonly scanPath: "base";
         readonly x402Network: "eip155:8453";
         readonly x402Supported: true;
+        readonly x402Providers: readonly ["payai"];
+        readonly x402DefaultProvider: "payai";
         readonly facilitatorUrl: "https://facilitator.payai.network";
         readonly usdcAddress: null;
     };
@@ -26,6 +31,8 @@ export declare const CHAINS: {
         readonly scanPath: "polygon";
         readonly x402Network: "eip155:137";
         readonly x402Supported: true;
+        readonly x402Providers: readonly ["payai"];
+        readonly x402DefaultProvider: "payai";
         readonly facilitatorUrl: "https://facilitator.payai.network";
         readonly usdcAddress: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
         readonly usdcName: "USD Coin";
@@ -38,6 +45,8 @@ export declare const CHAINS: {
         readonly scanPath: "monad";
         readonly x402Network: "eip155:143";
         readonly x402Supported: false;
+        readonly x402Providers: readonly [];
+        readonly x402DefaultProvider: null;
         readonly facilitatorUrl: null;
         readonly usdcAddress: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603";
         readonly usdcName: "USD Coin";
@@ -49,7 +58,9 @@ export declare const CHAINS: {
         readonly rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com";
         readonly scanPath: "sepolia";
         readonly x402Network: "eip155:11155111";
-        readonly x402Supported: false;
+        readonly x402Supported: true;
+        readonly x402Providers: readonly ["4mica"];
+        readonly x402DefaultProvider: "4mica";
         readonly facilitatorUrl: null;
         readonly usdcAddress: null;
     };
@@ -60,6 +71,8 @@ export declare const CHAINS: {
         readonly scanPath: "base-sepolia";
         readonly x402Network: "eip155:84532";
         readonly x402Supported: true;
+        readonly x402Providers: readonly ["payai"];
+        readonly x402DefaultProvider: "payai";
         readonly facilitatorUrl: "https://facilitator.payai.network";
         readonly usdcAddress: null;
     };
@@ -70,6 +83,8 @@ export declare const CHAINS: {
         readonly scanPath: "polygon-amoy";
         readonly x402Network: "eip155:80002";
         readonly x402Supported: true;
+        readonly x402Providers: readonly ["payai", "4mica"];
+        readonly x402DefaultProvider: "payai";
         readonly facilitatorUrl: "https://facilitator.payai.network";
         readonly usdcAddress: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582";
         readonly usdcName: "USDC";
@@ -82,6 +97,8 @@ export declare const CHAINS: {
         readonly scanPath: "monad-testnet";
         readonly x402Network: "eip155:10143";
         readonly x402Supported: false;
+        readonly x402Providers: readonly [];
+        readonly x402DefaultProvider: null;
         readonly facilitatorUrl: null;
         readonly usdcAddress: "0x534b2f3A21130d7a60830c2Df862319e593943A3";
         readonly usdcName: "USD Coin";

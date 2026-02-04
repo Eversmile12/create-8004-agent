@@ -1,7 +1,8 @@
 // Chain configs - SDK handles contract addresses internally
-// x402 facilitator: PayAI (https://facilitator.payai.network)
-// Supported: Base, Polygon
-// Not supported: Ethereum, Monad (no facilitator with x402 v2 support)
+// x402 facilitators:
+// - PayAI (https://facilitator.payai.network) for Base, Polygon
+// - 4mica (https://x402.4mica.xyz) for Ethereum Sepolia, Polygon Amoy
+// Not supported: Ethereum mainnet, Monad (no facilitator with x402 v2 support)
 export const CHAINS = {
     // ============ MAINNETS ============
     "eth-mainnet": {
@@ -11,6 +12,8 @@ export const CHAINS = {
         scanPath: "mainnet",
         x402Network: "eip155:1",
         x402Supported: false, // No facilitator supports Ethereum mainnet
+        x402Providers: [],
+        x402DefaultProvider: null,
         facilitatorUrl: null,
         usdcAddress: null,
     },
@@ -21,6 +24,8 @@ export const CHAINS = {
         scanPath: "base",
         x402Network: "eip155:8453",
         x402Supported: true,
+        x402Providers: ["payai"],
+        x402DefaultProvider: "payai",
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: null, // SDK has default
     },
@@ -31,6 +36,8 @@ export const CHAINS = {
         scanPath: "polygon",
         x402Network: "eip155:137",
         x402Supported: true,
+        x402Providers: ["payai"],
+        x402DefaultProvider: "payai",
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", // Native USDC
         usdcName: "USD Coin",
@@ -43,6 +50,8 @@ export const CHAINS = {
         scanPath: "monad",
         x402Network: "eip155:143",
         x402Supported: false, // No facilitator supports Monad with x402 v2
+        x402Providers: [],
+        x402DefaultProvider: null,
         facilitatorUrl: null,
         usdcAddress: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603", // Circle USDC
         usdcName: "USD Coin",
@@ -55,7 +64,9 @@ export const CHAINS = {
         rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
         scanPath: "sepolia",
         x402Network: "eip155:11155111",
-        x402Supported: false, // No facilitator supports Ethereum Sepolia
+        x402Supported: true,
+        x402Providers: ["4mica"],
+        x402DefaultProvider: "4mica",
         facilitatorUrl: null,
         usdcAddress: null,
     },
@@ -66,6 +77,8 @@ export const CHAINS = {
         scanPath: "base-sepolia",
         x402Network: "eip155:84532",
         x402Supported: true,
+        x402Providers: ["payai"],
+        x402DefaultProvider: "payai",
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: null, // SDK has default
     },
@@ -76,6 +89,8 @@ export const CHAINS = {
         scanPath: "polygon-amoy",
         x402Network: "eip155:80002",
         x402Supported: true,
+        x402Providers: ["payai", "4mica"],
+        x402DefaultProvider: "payai",
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", // Circle testnet USDC
         usdcName: "USDC",
@@ -88,6 +103,8 @@ export const CHAINS = {
         scanPath: "monad-testnet",
         x402Network: "eip155:10143",
         x402Supported: false, // No facilitator supports Monad with x402 v2
+        x402Providers: [],
+        x402DefaultProvider: null,
         facilitatorUrl: null,
         usdcAddress: "0x534b2f3A21130d7a60830c2Df862319e593943A3", // Circle testnet USDC
         usdcName: "USD Coin",

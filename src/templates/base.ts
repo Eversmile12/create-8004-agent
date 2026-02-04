@@ -1,8 +1,13 @@
 import type { WizardAnswers } from "../wizard.js";
 import { hasFeature } from "../wizard.js";
-import type { CHAINS } from "../config.js";
+import { CHAINS, type X402Provider } from "../config.js";
 
 type ChainConfig = (typeof CHAINS)[keyof typeof CHAINS];
+
+function getX402Provider(answers: WizardAnswers, chain: ChainConfig): X402Provider | null {
+    if (!hasFeature(answers, "x402")) return null;
+    return (answers.x402Provider ?? chain.x402DefaultProvider ?? chain.x402Providers?.[0]) ?? null;
+}
 
 // Helper to get funding instructions based on chain
 function getFundingInstructions(chain: ChainConfig): string {
@@ -67,9 +72,15 @@ export function generatePackageJson(answers: WizardAnswers): string {
     }
 
     if (hasFeature(answers, "x402")) {
-        dependencies["@x402/express"] = "^2.0.0";
-        dependencies["@x402/core"] = "^2.0.0";
-        dependencies["@x402/evm"] = "^2.0.0";
+        const provider = getX402Provider(answers, CHAINS[answers.chain as keyof typeof CHAINS]);
+        if (provider === "4mica") {
+            dependencies["@4mica/x402"] = "^0.1.0";
+        } else {
+            dependencies["@x402/express"] = "^2.0.0";
+            dependencies["@x402/core"] = "^2.0.0";
+            dependencies["@x402/evm"] = "^2.0.0";
+        }
+        dependencies["@x402/fetch"] = "^2.0.0";
     }
 
     return JSON.stringify(
@@ -105,10 +116,12 @@ OPENAI_API_KEY=your_openai_api_key_here
 `;
 
     if (hasFeature(answers, "x402")) {
+        const provider = getX402Provider(answers, chain);
         env += `
 # x402 Payment Configuration (optional overrides)
 X402_PAYEE_ADDRESS=${answers.agentWallet}
 X402_PRICE=$0.001
+${provider === "4mica" ? "X402_TAB_ENDPOINT=http://localhost:3000/x402/tab" : ""}
 `;
     }
 
@@ -392,6 +405,7 @@ export function generateReadme(answers: WizardAnswers, chain: ChainConfig): stri
     const hasA2A = hasFeature(answers, "a2a");
     const hasMCP = hasFeature(answers, "mcp");
     const hasX402 = hasFeature(answers, "x402");
+    const x402Provider = hasX402 ? getX402Provider(answers, chain) : null;
 
     return `# ${answers.agentName}
 
@@ -480,6 +494,7 @@ This agent has x402 payment support enabled. Protected endpoints require USDC pa
 Payment configuration in \`.env\`:
 - \`X402_PAYEE_ADDRESS\` - Wallet to receive payments
 - \`X402_PRICE\` - Price per request (e.g., $0.001)
+${x402Provider === "4mica" ? "- `X402_TAB_ENDPOINT` - Public tab endpoint advertised to clients" : ""}
 `
         : ""
 }

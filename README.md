@@ -52,7 +52,7 @@ my-agent/
 | **A2A server**        | Enable agent-to-agent communication                                                                            |
 | **A2A streaming**     | Enable Server-Sent Events (SSE) for streaming responses                                                        |
 | **MCP server**        | Enable Model Context Protocol tools                                                                            |
-| **x402 payments**     | [x402](https://x402.org) USDC micropayments (Base, Polygon)                                                    |
+| **x402 payments**     | [x402](https://x402.org) USDC micropayments (PayAI: Base/Polygon, 4mica: Sepolia/Amoy)                         |
 | **Chain**             | EVM: Ethereum, Base, Polygon, Monad (mainnet + testnets) / Solana: Devnet                                      |
 | **Trust models**      | reputation, crypto-economic, tee-attestation                                                                   |
 
@@ -171,11 +171,14 @@ curl -X POST http://localhost:3000/a2a \
 | Base Sepolia | PayAI | ✅ Testnet |
 | Polygon Mainnet | PayAI | ✅ Production |
 | Polygon Amoy | PayAI | ✅ Testnet |
+| Ethereum Sepolia | 4mica | ✅ Testnet |
+| Polygon Amoy | 4mica | ✅ Testnet |
 
 When enabled, the A2A server uses x402 middleware for micropayments:
 - Per-request pricing (default: $0.001 USDC)
 - Automatic payment verification via facilitator
 - Payment configuration in `.env`: `X402_PAYEE_ADDRESS`, `X402_PRICE`
+- 4mica only: `X402_TAB_ENDPOINT` (public tab endpoint advertised to clients)
 
 ## MCP Protocol
 
@@ -254,6 +257,7 @@ TEST_PAYER_PRIVATE_KEY=0x...your_private_key...
 
 2. Fund the wallet with testnet USDC on:
    - Base Sepolia
+   - Ethereum Sepolia
    - Polygon Amoy
 
 If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped (other tests still run).
@@ -266,6 +270,7 @@ If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped 
 -   [Model Context Protocol](https://modelcontextprotocol.io/)
 -   [x402 Protocol](https://x402.org)
 -   [PayAI Facilitator](https://payai.network) - x402 facilitator for Base, Polygon
+-   [4mica Facilitator](https://x402.4mica.xyz) - x402 facilitator for Ethereum Sepolia, Polygon Amoy
 -   [8004-solana SDK](https://github.com/8004-ai/8004-solana) - Solana implementation
 
 ## License

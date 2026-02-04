@@ -1,0 +1,33 @@
+{
+  "name": "my agent",
+  "description": "test agent created with create-8004-agent",
+  "url": "http://localhost:3000",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "authentication": null,
+  "defaultInputModes": [
+    "text"
+  ],
+  "defaultOutputModes": [
+    "text"
+  ],
+  "skills": [
+    {
+      "id": "chat",
+      "name": "Chat",
+      "description": "General conversation and question answering",
+      "tags": [
+        "conversation",
+        "qa"
+      ],
+      "examples": [
+        "Hello, how are you?",
+        "What can you help me with?"
+      ]
+    }
+  ]
+}

@@ -55,6 +55,9 @@ export function generatePackageJson(answers: WizardAnswers): string {
 
     if (hasFeature(answers, "a2a")) {
         scripts["start:a2a"] = "tsx src/a2a-server.ts";
+        scripts["a2a:discover"] = "tsx src/a2a-client.ts --discover";
+        scripts["a2a:chat"] = "tsx src/a2a-client.ts --interactive";
+        scripts["a2a:test"] = "tsx src/a2a-client.ts --test";
         dependencies["express"] = "^4.18.2";
         dependencies["uuid"] = "^9.0.0";
         devDependencies["@types/express"] = "^4.17.21";
@@ -452,6 +455,19 @@ npm run start:a2a
 \`\`\`
 
 Test locally: http://localhost:3000/.well-known/agent-card.json
+
+#### Test your agent
+
+\\\`\\\`\\\`bash
+# Discover agent capabilities
+npm run a2a:discover
+
+# Interactive chat mode
+npm run a2a:chat
+
+# Run automated tests
+npm run a2a:test
+\\\`\\\`\\\`
 `
         : ""
 }${
@@ -471,7 +487,7 @@ npm run start:mcp
 ${answers.agentName.toLowerCase().replace(/\s+/g, "-")}/
 ├── src/
 │   ├── register.ts      # Registration script
-│   ├── agent.ts         # LLM logic${hasA2A ? "\n│   └── a2a-server.ts   # A2A server" : ""}${
+│   ├── agent.ts         # LLM logic${hasA2A ? "\n│   ├── a2a-server.ts   # A2A server\n│   └── a2a-client.ts   # A2A testing client" : ""}${
         hasMCP ? "\n│   └── mcp-server.ts   # MCP server" : ""
     }
 ├── .env                 # Environment variables (keep secret!)

@@ -35,6 +35,9 @@ export function generateSolanaPackageJson(answers: WizardAnswers): string {
 
     if (hasFeature(answers, "a2a")) {
         scripts["start:a2a"] = "tsx src/a2a-server.ts";
+        scripts["a2a:discover"] = "tsx src/a2a-client.ts --discover";
+        scripts["a2a:chat"] = "tsx src/a2a-client.ts --interactive";
+        scripts["a2a:test"] = "tsx src/a2a-client.ts --test";
         dependencies["express"] = "^4.18.2";
         dependencies["uuid"] = "^9.0.0";
         devDependencies["@types/express"] = "^4.17.21";

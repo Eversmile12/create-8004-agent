@@ -30,7 +30,7 @@ import {
     generateMonadReadme,
 } from "./templates/monad.js";
 // Shared templates (work for both EVM and Solana)
-import { generateA2AServer, generateAgentCard } from "./templates/a2a.js";
+import { generateA2AServer, generateAgentCard, generateA2AClient } from "./templates/a2a.js";
 import { generateMCPServer, generateMCPTools } from "./templates/mcp.js";
 
 export async function generateProject(answers: WizardAnswers): Promise<void> {
@@ -56,6 +56,7 @@ export async function generateProject(answers: WizardAnswers): Promise<void> {
     // Generate shared files (A2A, MCP work for both)
     if (hasFeature(answers, "a2a")) {
         await writeFile(projectPath, "src/a2a-server.ts", generateA2AServer(answers));
+        await writeFile(projectPath, "src/a2a-client.ts", generateA2AClient());
         await writeFile(projectPath, ".well-known/agent-card.json", generateAgentCard(answers));
     }
 

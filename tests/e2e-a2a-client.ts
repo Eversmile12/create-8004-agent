@@ -9,7 +9,7 @@
  * 4. Start A2A server
  * 5. Test all client commands
  *
- * Run: yarn test:e2e
+ * Run: npm test:e2e
  */
 
 import { generateProject } from "../dist/generator.js";
@@ -133,7 +133,7 @@ async function main() {
     console.log("\n📦 Phase 2: Install Dependencies\n");
 
     await test("Install dependencies", () => {
-        execSync("yarn install --ignore-engines --silent 2>/dev/null", {
+        execSync("npm install --ignore-engines --silent 2>/dev/null", {
             cwd: TEST_DIR,
             stdio: "pipe",
             timeout: 120000,

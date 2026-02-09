@@ -1,6 +1,6 @@
 {
     "name": "create-8004-agent",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "CLI to scaffold ERC-8004 compliant AI agents with A2A, MCP, and x402 support",
     "type": "module",
     "bin": {
@@ -13,6 +13,7 @@
         "build": "tsc",
         "start": "node dist/index.js",
         "dev": "tsx src/index.ts",
+        "test:e2e": "tsx tests/e2e-a2a-client.ts",
         "test": "vitest run",
         "test:watch": "vitest",
         "prepublishOnly": "npm run build"

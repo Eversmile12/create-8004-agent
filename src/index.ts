@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import chalk from "chalk";
 import ora from "ora";
+import { execSync } from "child_process";
 import { runWizard, hasFeature, isSolanaChain } from "./wizard.js";
 import { generateProject } from "./generator.js";
 import { maybeRegisterWithFourmica } from "./fourmica.js";
@@ -21,23 +22,34 @@ async function main() {
         const isSolana = isSolanaChain(answers.chain);
         spinner.succeed(chalk.green(`${isSolana ? "8004" : "ERC-8004"} Agent generated successfully!`));
 
-        await maybeRegisterWithFourmica(answers);
+    // Install dependencies automatically
+    const installDir = answers.projectDir === "." ? process.cwd() : answers.projectDir;
+    const installSpinner = ora("Installing dependencies...").start();
+    try {
+        execSync("npm install", { 
+            cwd: installDir, 
+            stdio: "pipe" 
+        });
+        installSpinner.succeed(chalk.green("Dependencies installed successfully!"));
+    } catch (error) {
+        installSpinner.fail(chalk.yellow("Failed to install dependencies. Run 'npm install' manually."));
+    }
+
+    await maybeRegisterWithFourmica(answers);
 
     // Print step-by-step guide
-        const projectDir = answers.projectDir === "." ? "current directory" : answers.projectDir;
     let step = 1;
 
         console.log(chalk.bold.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
         console.log(chalk.bold.cyan("  🚀 NEXT STEPS"));
         console.log(chalk.bold.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"));
 
-    // Step 1: Navigate and install
-    console.log(chalk.bold.white(`${step}. Install dependencies`));
-        if (answers.projectDir !== ".") {
-      console.log(chalk.gray(`   cd ${answers.projectDir}`));
+    // Step 1: Navigate to directory (if not current)
+    if (answers.projectDir !== ".") {
+        console.log(chalk.bold.white(`${step}. Navigate to your project`));
+        console.log(chalk.gray(`   cd ${answers.projectDir}\n`));
+        step++;
     }
-        console.log(chalk.gray("   npm install\n"));
-    step++;
 
     // Step 2: Wallet info (if generated)
     if (answers.generatedPrivateKey) {

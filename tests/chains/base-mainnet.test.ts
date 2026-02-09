@@ -10,4 +10,5 @@ createChainTestSuite({
     chainKey: 'base-mainnet',
     chainName: 'Base Mainnet',
     x402Supported: true,
+    x402Provider: 'payai',
 });

@@ -12,30 +12,45 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { generateProject } from '../../dist/generator.js';
 import type { WizardAnswers } from '../../dist/wizard.js';
-import type { ChainKey } from '../../dist/config.js';
+import type { ChainKey, X402Provider } from '../../dist/config.js';
 
 const execAsync = promisify(exec);
 
 // Test configuration
 export const TEST_BASE_DIR = path.join(process.cwd(), 'test-output');
+export const TEST_HOST = process.env.TEST_HOST || '127.0.0.1';
+export const getTestBaseUrl = (port: number) => `http://${TEST_HOST}:${port}`;
 
 // Port allocation based on hash of project name to avoid conflicts
 const usedPorts = new Set<number>();
+const WORKER_PORT_BLOCK_SIZE = 2000;
+const WORKER_PORT_OFFSET = (() => {
+    const raw =
+        process.env.VITEST_WORKER_ID ||
+        process.env.JEST_WORKER_ID ||
+        process.env.VITEST_POOL_ID ||
+        "0";
+    const workerId = Number(raw);
+    return Number.isFinite(workerId) ? workerId * WORKER_PORT_BLOCK_SIZE : 0;
+})();
 
 // Get a unique port based on project name (deterministic)
 export function getPort(projectName: string): number {
-    // Generate a port from 4000-5999 based on hash
+    // Generate a port from 4000-5999 based on hash (per worker block)
     let hash = 0;
     for (let i = 0; i < projectName.length; i++) {
         hash = ((hash << 5) - hash) + projectName.charCodeAt(i);
         hash = hash & hash;
     }
-    let port = 4000 + Math.abs(hash % 2000);
+    const blockBase = 4000 + WORKER_PORT_OFFSET;
+    let port = blockBase + Math.abs(hash % WORKER_PORT_BLOCK_SIZE);
     
     // Find next available port if collision
     while (usedPorts.has(port)) {
         port++;
-        if (port >= 6000) port = 4000;
+        if (port >= blockBase + WORKER_PORT_BLOCK_SIZE) {
+            port = blockBase;
+        }
     }
     
     usedPorts.add(port);
@@ -44,7 +59,14 @@ export function getPort(projectName: string): number {
 
 // Legacy function for compatibility
 export function getNextPort(): number {
-    let port = 4000 + usedPorts.size;
+    const blockBase = 4000 + WORKER_PORT_OFFSET;
+    let port = blockBase + usedPorts.size;
+    while (usedPorts.has(port)) {
+        port++;
+        if (port >= blockBase + WORKER_PORT_BLOCK_SIZE) {
+            port = blockBase;
+        }
+    }
     usedPorts.add(port);
     return port;
 }
@@ -62,6 +84,7 @@ export interface TestAgentOptions {
     features: ('a2a' | 'mcp' | 'x402')[];
     a2aStreaming?: boolean;
     projectName?: string;
+    x402Provider?: X402Provider;
 }
 
 /**
@@ -87,6 +110,7 @@ export async function generateTestAgent(options: TestAgentOptions): Promise<stri
         chain: options.chain,
         trustModels: ['reputation'],
         agentWallet: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0',
+        x402Provider: options.x402Provider,
     };
     
     await generateProject(answers);
@@ -197,7 +221,7 @@ export class ServerProcess {
                     }
                     
                     try {
-                        const res = await fetch(`http://localhost:${this.port}/.well-known/agent-card.json`);
+                        const res = await fetch(`${getTestBaseUrl(this.port)}/.well-known/agent-card.json`);
                         if (res.ok) {
                             resolve();
                             return;

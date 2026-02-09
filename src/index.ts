@@ -4,6 +4,7 @@ import ora from "ora";
 import { execSync } from "child_process";
 import { runWizard, hasFeature, isSolanaChain } from "./wizard.js";
 import { generateProject } from "./generator.js";
+import { maybeRegisterWithFourmica } from "./fourmica.js";
 
 async function main() {
     console.log(chalk.bold.cyan("\n🤖 8004 Agent Generator\n"));
@@ -33,6 +34,8 @@ async function main() {
     } catch (error) {
         installSpinner.fail(chalk.yellow("Failed to install dependencies. Run 'npm install' manually."));
     }
+
+    await maybeRegisterWithFourmica(answers);
 
     // Print step-by-step guide
     let step = 1;

@@ -4,6 +4,7 @@ import ora from "ora";
 import { execSync } from "child_process";
 import { runWizard, hasFeature, isSolanaChain } from "./wizard.js";
 import { generateProject } from "./generator.js";
+import { maybeRegisterWithFourmica } from "./fourmica.js";
 async function main() {
     console.log(chalk.bold.cyan("\n🤖 8004 Agent Generator\n"));
     console.log(chalk.gray("Create a trustless AI agent with A2A, MCP, and x402 support\n"));
@@ -28,6 +29,7 @@ async function main() {
         catch (error) {
             installSpinner.fail(chalk.yellow("Failed to install dependencies. Run 'npm install' manually."));
         }
+        await maybeRegisterWithFourmica(answers);
         // Print step-by-step guide
         let step = 1;
         console.log(chalk.bold.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));

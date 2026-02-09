@@ -8,5 +8,6 @@ createChainTestSuite({
     chainKey: 'polygon-amoy',
     chainName: 'Polygon Amoy',
     x402Supported: true,
+    x402Provider: 'payai',
     isTestnet: true,
 });

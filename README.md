@@ -43,6 +43,7 @@ npx create-8004-agent
 ```
 
 That's it! The wizard will guide you through creating your agent.
+If you want 4mica-powered x402 payments, choose a supported chain (Ethereum Sepolia or Polygon Amoy), enable `x402 payments`, and select `4mica` as the provider when prompted.
 
 ## What Gets Generated
 
@@ -205,11 +206,26 @@ curl -X POST http://localhost:3000/a2a \
 | Base Sepolia | PayAI | ✅ Testnet |
 | Polygon Mainnet | PayAI | ✅ Production |
 | Polygon Amoy | PayAI | ✅ Testnet |
+| Ethereum Sepolia | 4mica | ✅ Testnet |
+| Polygon Amoy | 4mica | ✅ Testnet |
 
 When enabled, the A2A server uses x402 middleware for micropayments:
 - Per-request pricing (default: $0.001 USDC)
 - Automatic payment verification via facilitator
 - Payment configuration in `.env`: `X402_PAYEE_ADDRESS`, `X402_PRICE`
+- 4mica only: `X402_TAB_ENDPOINT` (public tab endpoint advertised to clients)
+
+### 4mica Setup (Optional Collateral Deposit)
+
+If you select `x402 payments` and choose `4mica` during the wizard, you will be prompted:
+`Register with 4mica now (optional collateral deposit)?`
+
+If you say **yes**, the CLI will:
+- Ask for a wallet private key (or use the one it generated).
+- Ask which asset to deposit (USDC, USDT, or native token) and how much.
+- Submit an on-chain deposit via the 4mica SDK and print the transaction hash.
+
+You can safely skip this step if you are not ready to fund the wallet yet. The agent still generates and runs; you can enable 4Mica later after funding a wallet.
 
 ## MCP Protocol
 
@@ -288,6 +304,7 @@ TEST_PAYER_PRIVATE_KEY=0x...your_private_key...
 
 2. Fund the wallet with testnet USDC on:
    - Base Sepolia
+   - Ethereum Sepolia
    - Polygon Amoy
 
 If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped (other tests still run).
@@ -300,6 +317,7 @@ If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped 
 -   [Model Context Protocol](https://modelcontextprotocol.io/)
 -   [x402 Protocol](https://x402.org)
 -   [PayAI Facilitator](https://payai.network) - x402 facilitator for Base, Polygon
+-   [4mica Facilitator](https://x402.4mica.xyz) - x402 facilitator for Ethereum Sepolia, Polygon Amoy
 -   [8004-solana SDK](https://github.com/8004-ai/8004-solana) - Solana implementation
 
 ## License

@@ -8,4 +8,5 @@ createChainTestSuite({
     chainKey: 'polygon-mainnet',
     chainName: 'Polygon Mainnet',
     x402Supported: true,
+    x402Provider: 'payai',
 });

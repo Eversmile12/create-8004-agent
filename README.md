@@ -49,7 +49,7 @@ That's it! The wizard will guide you through creating your agent.
 The wizard creates a complete agent project with:
 
 ```
-my-agent/
+agents/my-agent/
 ├── package.json
 ├── .env.example
 ├── registration.json          # ERC-8004 metadata
@@ -104,7 +104,7 @@ my-agent/
 After generating your project:
 
 ```bash
-cd my-agent
+cd agents/my-agent
 npm install
 ```
 

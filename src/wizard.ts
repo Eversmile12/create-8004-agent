@@ -67,7 +67,7 @@ export async function runWizard(): Promise<WizardAnswers> {
             type: "input",
             name: "projectDir",
             message: "Project directory (or . for current):",
-            default: "my-agent",
+            default: "agents/my-agent",
         },
         {
             type: "input",
@@ -166,8 +166,13 @@ export async function runWizard(): Promise<WizardAnswers> {
         },
     ]);
 
-    // Check if directory exists and get available name
+    // Normalize project directory so agents live under ./agents by default
     let projectDir = answers.projectDir;
+    if (projectDir !== "." && !path.isAbsolute(projectDir) && !projectDir.startsWith("agents/")) {
+        projectDir = `agents/${projectDir}`;
+    }
+
+    // Check if directory exists and get available name
     const availableDir = getAvailableDir(projectDir);
     if (availableDir !== projectDir) {
         console.log(`\n📁 Directory "${projectDir}" exists, using "${availableDir}" instead`);

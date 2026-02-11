@@ -84,12 +84,14 @@ my-agent/
 
 ### EVM Chains
 
-| Chain         | Identity Registry                            | Status       |
-| ------------- | -------------------------------------------- | ------------ |
-| ETH Sepolia   | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| Base Sepolia  | Coming soon                                  | 🔜 Pending   |
-| Linea Sepolia | Coming soon                                  | 🔜 Pending   |
-| Polygon Amoy  | Coming soon                                  | 🔜 Pending   |
+| Chain           | Identity Registry                            | Reputation Registry                            | Status       |
+| --------------- | -------------------------------------------- | ---------------------------------------------- | ------------ |
+| ETH Sepolia     | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | `0x8004B663056A597Dffe9eCcC1965A193B7388713`   | ✅ Available |
+| Arbitrum One    | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63`   | ✅ Available |
+| Arbitrum Sepolia| `0x8004A818BFB912233c491871b3d84c89A494BD9e` | `0x8004B663056A597Dffe9eCcC1965A193B7388713`   | ✅ Available |
+| Base Sepolia    | Coming soon                                  | Coming soon                                    | 🔜 Pending   |
+| Linea Sepolia   | Coming soon                                  | Coming soon                                    | 🔜 Pending   |
+| Polygon Amoy    | Coming soon                                  | Coming soon                                    | 🔜 Pending   |
 
 ### Solana
 

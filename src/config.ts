@@ -14,6 +14,16 @@ export const CHAINS = {
         facilitatorUrl: null,
         usdcAddress: null,
     },
+    "arbitrum-mainnet": {
+        name: "Arbitrum One",
+        chainId: 42161,
+        rpcUrl: "https://arb1.arbitrum.io/rpc",
+        scanPath: "arbitrum",
+        x402Network: "eip155:42161",
+        x402Supported: false, // No facilitator supports Arbitrum with x402 v2 (yet)
+        facilitatorUrl: null,
+        usdcAddress: null,
+    },
     "base-mainnet": {
         name: "Base Mainnet",
         chainId: 8453,
@@ -56,6 +66,16 @@ export const CHAINS = {
         scanPath: "sepolia",
         x402Network: "eip155:11155111",
         x402Supported: false, // No facilitator supports Ethereum Sepolia
+        facilitatorUrl: null,
+        usdcAddress: null,
+    },
+    "arbitrum-sepolia": {
+        name: "Arbitrum Sepolia (Testnet)",
+        chainId: 421614,
+        rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
+        scanPath: "arbitrum-sepolia",
+        x402Network: "eip155:421614",
+        x402Supported: false, // No facilitator supports Arbitrum Sepolia with x402 v2 (yet)
         facilitatorUrl: null,
         usdcAddress: null,
     },

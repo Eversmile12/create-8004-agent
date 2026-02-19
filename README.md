@@ -97,6 +97,15 @@ my-agent/
 | ------- | ---------------------------------------------- |
 | Devnet  | `HvF3JqhahcX7JfhbDRYYCJ7S3f6nJdrqu5yi9shyTREp` |
 
+### TRON
+
+| Network | Identity Registry                         | Status       |
+| ------- | ----------------------------------------- | ------------ |
+| Mainnet | `THmfi8uJuUpTfUmYLDX7UD1KaE4P6HKgqA`    | ✅ Available |
+| Shasta  | `TFKNqk9bjwWp5uRiiGimqfLhVQB8jSxYi7`    | ✅ Available |
+
+> TRON support via [M2M TRC-8004 Registry](https://m2mregistry.io). Uses TronBox for deployment. See the [M2M SDK](https://github.com/M2M-TRC8004-Registry/trc8004-m2m-sdk) for Python integration.
+
 ## Generated Project Usage
 
 After generating your project:
@@ -301,6 +310,9 @@ If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped 
 -   [x402 Protocol](https://x402.org)
 -   [PayAI Facilitator](https://payai.network) - x402 facilitator for Base, Polygon
 -   [8004-solana SDK](https://github.com/8004-ai/8004-solana) - Solana implementation
+
+-   [M2M TRC-8004 Registry](https://m2mregistry.io) - TRON implementation of ERC-8004
+-   [TRC-8004 Python SDK](https://github.com/M2M-TRC8004-Registry/trc8004-m2m-sdk) - `pip install trc8004-m2m`
 
 ## License
 

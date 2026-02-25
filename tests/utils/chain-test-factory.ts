@@ -397,7 +397,8 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     // Supported x402 networks:
                     // Base mainnet: eip155:8453, Base Sepolia: eip155:84532
                     // Polygon mainnet: eip155:137, Polygon Amoy: eip155:80002
-                    expect(serverCode).toMatch(/eip155:(8453|84532|137|80002)/);
+                    // SKALE Base mainnet: eip155:1187947933, SKALE Base Sepolia: eip155:324705682
+                    expect(serverCode).toMatch(/eip155:(8453|84532|137|80002|1187947933|324705682)/);
                 });
 
                 it('should configure payment to wallet address', async () => {

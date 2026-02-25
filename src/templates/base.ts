@@ -12,6 +12,7 @@ function getFundingInstructions(chain: ChainConfig): string {
         8453: "ETH", // Base
         137: "MATIC", // Polygon
         143: "MON", // Monad
+        1187947933: "CREDIT", // SKALE Base
     };
 
     if (mainnetChains[chain.chainId]) {
@@ -25,6 +26,7 @@ function getFundingInstructions(chain: ChainConfig): string {
         84532: "https://www.coinbase.com/faucets/base-ethereum-goerli-faucet", // Base Sepolia
         80002: "https://faucet.polygon.technology/", // Polygon Amoy
         10143: "https://faucet.monad.xyz/", // Monad Testnet
+        324705682: "https://base-sepolia-faucet.skale.space/", // SKALE Base Sepolia
     };
 
     const faucetUrl = faucets[chain.chainId];

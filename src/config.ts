@@ -45,7 +45,20 @@ export const CHAINS = {
         x402Supported: false, // No facilitator supports Monad with x402 v2
         facilitatorUrl: null,
         usdcAddress: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603", // Circle USDC
-        usdcName: "USD Coin",
+        usdcName: "USD Circle",
+        usdcVersion: "2",
+    },
+    "skale-base-mainnet": {
+        name: "SKALE Base (Mainnet)",
+        chainId: 1187947933,
+        rpcUrl: "https://skale-base.skalenodes.com/v1/base",
+        scanPath: "skale-base",
+        x402Network: "eip155:1187947933",
+        x402Supported: true,
+        facilitatorUrl: "https://facilitator.payai.network",
+        usdcAddress: "0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20", // Bridged USDC on SKALE Base
+        usdcName: "Bridged USDC (SKALE Bridge)",
+        usdcSymbol: "USDC.e",
         usdcVersion: "2",
     },
     // ============ TESTNETS ============
@@ -90,7 +103,20 @@ export const CHAINS = {
         x402Supported: false, // No facilitator supports Monad with x402 v2
         facilitatorUrl: null,
         usdcAddress: "0x534b2f3A21130d7a60830c2Df862319e593943A3", // Circle testnet USDC
-        usdcName: "USD Coin",
+        usdcName: "USD Circle",
+        usdcVersion: "2",
+    },
+    "skale-base-sepolia": {
+        name: "SKALE Base Sepolia (Testnet)",
+        chainId: 324705682,
+        rpcUrl: "https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha",
+        scanPath: "skale-base-sepolia",
+        x402Network: "eip155:324705682",
+        x402Supported: true,
+        facilitatorUrl: "https://facilitator.payai.network",
+        usdcAddress: "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD", // Bridged USDC on SKALE Base Sepolia
+        usdcName: "Bridged USDC (SKALE Bridge)",
+        usdcSymbol: "USDC.e",
         usdcVersion: "2",
     },
 } as const;

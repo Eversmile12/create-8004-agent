@@ -84,12 +84,14 @@ my-agent/
 
 ### EVM Chains
 
-| Chain         | Identity Registry                            | Status       |
-| ------------- | -------------------------------------------- | ------------ |
-| ETH Sepolia   | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| Base Sepolia  | Coming soon                                  | 🔜 Pending   |
-| Linea Sepolia | Coming soon                                  | 🔜 Pending   |
-| Polygon Amoy  | Coming soon                                  | 🔜 Pending   |
+| Chain            | Identity Registry                            | Status       |
+| ---------------- | -------------------------------------------- | ------------ |
+| ETH Sepolia      | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
+| Base Sepolia     | Coming soon                                  | 🔜 Pending   |
+| Linea Sepolia    | Coming soon                                  | 🔜 Pending   |
+| Polygon Amoy     | Coming soon                                  | 🔜 Pending   |
+| Avalanche C-Chain | Via agent0-sdk (chainId 43114)               | ✅ Available |
+| Avalanche Fuji     | Via agent0-sdk (chainId 43113)               | ✅ Available |
 
 ### Solana
 

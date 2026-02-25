@@ -12,6 +12,7 @@ function getFundingInstructions(chain: ChainConfig): string {
         8453: "ETH", // Base
         137: "MATIC", // Polygon
         143: "MON", // Monad
+        43114: "AVAX", // Avalanche C-Chain
     };
 
     if (mainnetChains[chain.chainId]) {
@@ -25,6 +26,7 @@ function getFundingInstructions(chain: ChainConfig): string {
         84532: "https://www.coinbase.com/faucets/base-ethereum-goerli-faucet", // Base Sepolia
         80002: "https://faucet.polygon.technology/", // Polygon Amoy
         10143: "https://faucet.monad.xyz/", // Monad Testnet
+        43113: "https://faucet.avax.network/", // Avalanche Fuji
     };
 
     const faucetUrl = faucets[chain.chainId];

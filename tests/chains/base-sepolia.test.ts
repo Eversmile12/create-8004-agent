@@ -10,5 +10,6 @@ createChainTestSuite({
     chainKey: 'base-sepolia',
     chainName: 'Base Sepolia',
     x402Supported: true,
+    x402Provider: 'payai',
     isTestnet: true,
 });

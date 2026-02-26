@@ -7,7 +7,17 @@ function getX402Network(answers) {
     }
     return CHAINS[answers.chain].x402Network;
 }
-function getFacilitatorUrl(answers) {
+function getX402Provider(answers) {
+    if (isSolanaChain(answers.chain)) {
+        return "payai";
+    }
+    const chainConfig = CHAINS[answers.chain];
+    return (answers.x402Provider ?? chainConfig.x402DefaultProvider ?? chainConfig.x402Providers?.[0]) ?? null;
+}
+function getFacilitatorUrl(answers, provider) {
+    if (provider === "4mica") {
+        return "https://x402.4mica.xyz";
+    }
     if (isSolanaChain(answers.chain)) {
         // Solana uses PayAI facilitator
         return "https://facilitator.payai.network";
@@ -31,13 +41,19 @@ function getUsdcConfig(answers) {
 export function generateA2AServer(answers) {
     const isSolana = isSolanaChain(answers.chain);
     const x402Network = hasFeature(answers, "x402") ? getX402Network(answers) : "";
-    const facilitatorUrl = hasFeature(answers, "x402") ? getFacilitatorUrl(answers) : "";
-    const usdcConfig = hasFeature(answers, "x402") ? getUsdcConfig(answers) : null;
+    const x402Provider = hasFeature(answers, "x402") ? getX402Provider(answers) : null;
+    const resolvedProvider = x402Provider ?? "payai";
+    const facilitatorUrl = hasFeature(answers, "x402")
+        ? getFacilitatorUrl(answers, x402Provider)
+        : "";
+    const usdcConfig = hasFeature(answers, "x402") && resolvedProvider === "payai" ? getUsdcConfig(answers) : null;
     // x402 v2 imports - @x402/evm for EVM chains, @x402/svm for Solana
     const x402SchemePackage = isSolana ? "@x402/svm" : "@x402/evm";
     const x402SchemeClass = isSolana ? "ExactSvmScheme" : "ExactEvmScheme";
     const x402Import = hasFeature(answers, "x402")
-        ? `import { paymentMiddleware, x402ResourceServer } from '@x402/express';
+        ? resolvedProvider === "4mica"
+            ? `import { paymentMiddlewareFromConfig } from '@4mica/x402/server/express';`
+            : `import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { HTTPFacilitatorClient } from '@x402/core/server';
 import { ${x402SchemeClass} } from '${x402SchemePackage}/exact/server';`
         : "";
@@ -45,10 +61,12 @@ import { ${x402SchemeClass} } from '${x402SchemePackage}/exact/server';`
         ? `import { streamResponse, type AgentMessage } from './agent.js';`
         : `import { generateResponse, type AgentMessage } from './agent.js';`;
     // Determine which facilitator is being used for the comment
-    const facilitatorComment = "PayAI facilitator (Base, Polygon)";
+    const facilitatorComment = resolvedProvider === "4mica" ? "4mica facilitator" : "PayAI facilitator (Base, Polygon)";
     // Generate custom USDC parser if needed (for networks without SDK defaults)
-    const customUsdcParser = usdcConfig
-        ? `
+    const customUsdcParser = resolvedProvider !== "payai"
+        ? ""
+        : usdcConfig
+            ? `
 // Custom USDC configuration for this network (not in SDK defaults)
 const USDC_ADDRESS = '${usdcConfig.address}';
 const USDC_NAME = '${usdcConfig.name}';
@@ -70,12 +88,41 @@ evmScheme.registerMoneyParser(async (amount) => {
   };
 });
 `
-        : `
+            : `
 // Create scheme (using SDK default USDC address)
 const evmScheme = new ${x402SchemeClass}();
 `;
     const x402Setup = hasFeature(answers, "x402")
-        ? `
+        ? resolvedProvider === "4mica"
+            ? `
+// x402 v2 payment middleware - protects the /a2a endpoint
+// Facilitator: ${facilitatorComment}
+const PAYEE_ADDRESS = process.env.X402_PAYEE_ADDRESS || '${answers.agentWallet}';
+const X402_NETWORK = '${x402Network}'; // CAIP-2 EVM network
+const X402_TAB_ENDPOINT =
+  process.env.X402_TAB_ENDPOINT || \`http://localhost:\${process.env.PORT || 3000}/x402/tab\`;
+
+app.use(
+  paymentMiddlewareFromConfig(
+    {
+      'POST /a2a': {
+        accepts: {
+          scheme: '4mica-credit',
+          price: process.env.X402_PRICE || '$0.001',
+          network: X402_NETWORK,
+          payTo: PAYEE_ADDRESS,
+        },
+        description: '${answers.agentDescription.replace(/'/g, "\\'")}',
+        mimeType: 'application/json',
+      },
+    },
+    {
+      advertisedEndpoint: X402_TAB_ENDPOINT,
+    },
+  ),
+);
+`
+            : `
 // x402 v2 payment middleware - protects the /a2a endpoint
 // Facilitator: ${facilitatorComment}
 const PAYEE_ADDRESS = process.env.X402_PAYEE_ADDRESS || '${answers.agentWallet}';
@@ -129,12 +176,16 @@ app.use(
 
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
+import fs from 'node:fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 ${streamingImport}
 ${x402Import}
 
 const app = express();
 app.use(express.json());
+
+// Resolve agent card path once for reliability across runtimes.
+const agentCardUrl = new URL('../.well-known/agent-card.json', import.meta.url);
 
 // ============================================================================
 // In-Memory Storage
@@ -168,8 +219,12 @@ ${x402Setup}
  * Other agents use this to learn about your agent's capabilities
  */
 app.get('/.well-known/agent-card.json', async (_req: Request, res: Response) => {
-  const agentCard = await import('../.well-known/agent-card.json', { assert: { type: 'json' } });
-  res.json(agentCard.default);
+  try {
+    const raw = await fs.readFile(agentCardUrl, 'utf-8');
+    res.json(JSON.parse(raw));
+  } catch {
+    res.status(500).json({ error: 'Failed to load agent card' });
+  }
 });
 
 ${answers.a2aStreaming

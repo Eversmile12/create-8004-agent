@@ -142,6 +142,20 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { defineChain } from 'viem';
 
 // ============================================================================
+// Agent0 SDK Compatibility Notes (Monad)
+// ============================================================================
+// The Agent0 SDK (agent0-sdk) does not support Monad yet. For reference, the
+// EVM template uses patterns like:
+//
+// import { SDK } from 'agent0-sdk';
+// const sdk = new SDK({ chainId: ${chain.chainId} }); // chainId: ${chain.chainId}
+// const agent = sdk.agent(AGENT_METADATA);
+// agent.setTrust(${trustModels});
+// await agent.registerIPFS();
+//
+// We use direct contract calls below instead of the SDK.
+
+// ============================================================================
 // Monad Chain Definition
 // ============================================================================
 
@@ -435,6 +449,28 @@ ${answers.agentName.toLowerCase().replace(/\s+/g, "-")}/
 ├── .env                 # Environment variables (keep secret!)
 └── package.json
 \`\`\`
+
+## OASF Skills & Domains (Optional)
+
+Add capabilities and domain expertise to help others discover your agent.
+
+Edit \`src/register.ts\` and add \`skills\` / \`domains\` on \`AGENT_METADATA\`:
+
+\`\`\`typescript
+const AGENT_METADATA = {
+  // ...
+  skills: [
+    'natural_language_processing/natural_language_generation/summarization',
+    'analytical_skills/coding_skills/text_to_code',
+  ],
+  domains: [
+    'technology/software_engineering',
+    'finance_and_business/investment_services',
+  ],
+};
+\`\`\`
+
+Browse the full taxonomy: https://schema.oasf.outshift.com/0.8.0
 
 ## Resources
 

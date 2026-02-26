@@ -25,6 +25,18 @@ function getAvailableDir(baseDir) {
 export { isSolanaChain } from "./config-solana.js";
 // Helper getters for cleaner access
 export const hasFeature = (answers, feature) => answers.features.includes(feature);
+function getX402Providers(chainKey) {
+    if (!chainKey || isSolanaChain(chainKey))
+        return [];
+    const chainConfig = CHAINS[chainKey];
+    return chainConfig.x402Providers ?? [];
+}
+function getDefaultX402Provider(chainKey) {
+    if (!chainKey || isSolanaChain(chainKey))
+        return undefined;
+    const chainConfig = CHAINS[chainKey];
+    return chainConfig.x402DefaultProvider ?? chainConfig.x402Providers?.[0];
+}
 export async function runWizard() {
     console.log("\n");
     const answers = await inquirer.prompt([
@@ -111,8 +123,32 @@ export async function runWizard() {
                     { name: "MCP Server (Model Context Protocol tools)", value: "mcp", checked: false },
                     x402Supported
                         ? { name: "x402 Payments (USDC micropayments)", value: "x402", checked: false }
-                        : { name: "x402 Payments", value: "x402", disabled: "Not available on Ethereum" },
+                        : { name: "x402 Payments", value: "x402", disabled: "Not available on selected chain" },
                 ];
+            },
+        },
+        {
+            type: "list",
+            name: "x402Provider",
+            message: "x402 provider:",
+            choices: (ans) => {
+                const providers = getX402Providers(ans.chain);
+                return providers.map((provider) => {
+                    if (provider === "4mica") {
+                        return {
+                            name: "4mica (credit, Ethereum Sepolia / Polygon Amoy)",
+                            value: "4mica",
+                        };
+                    }
+                    return {
+                        name: "PayAI (exact, Base / Polygon)",
+                        value: "payai",
+                    };
+                });
+            },
+            when: (ans) => {
+                const providers = getX402Providers(ans.chain);
+                return (ans.features?.includes("x402") ?? false) && providers.length > 1;
             },
         },
         {
@@ -156,11 +192,18 @@ export async function runWizard() {
             console.log("\n🔑 Generated new wallet:", agentWallet);
         }
     }
+    let x402Provider = answers.x402Provider;
+    if (answers.features.includes("x402")) {
+        if (!x402Provider) {
+            x402Provider = getDefaultX402Provider(answers.chain);
+        }
+    }
     return {
         ...answers,
         projectDir,
         agentWallet,
         generatedPrivateKey,
+        x402Provider,
         // Default to false if A2A not selected (question was skipped)
         a2aStreaming: answers.a2aStreaming ?? false,
     };

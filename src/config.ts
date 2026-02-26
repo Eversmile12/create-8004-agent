@@ -31,6 +31,18 @@ export const CHAINS = {
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: null, // SDK has default
     },
+    "avalanche-mainnet": {
+        name: "Avalanche C-Chain",
+        chainId: 43114,
+        rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+        scanPath: "avalanche",
+        x402Network: "eip155:43114",
+        x402Supported: false, // PayAI facilitator doesn't support Avalanche yet
+        facilitatorUrl: null,
+        usdcAddress: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", // Native USDC
+        usdcName: "USD Coin",
+        usdcVersion: "2",
+    },
     "polygon-mainnet": {
         name: "Polygon Mainnet",
         chainId: 137,
@@ -83,6 +95,18 @@ export const CHAINS = {
         x402DefaultProvider: "payai" as X402Provider,
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: null, // SDK has default
+    },
+    "avalanche-fuji": {
+        name: "Avalanche Fuji (Testnet)",
+        chainId: 43113,
+        rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
+        scanPath: "avalanche-fuji",
+        x402Network: "eip155:43113",
+        x402Supported: false,
+        facilitatorUrl: null,
+        usdcAddress: "0x5425890298aed601595a70AB815c96711a31Bc65", // Circle testnet USDC
+        usdcName: "USDC",
+        usdcVersion: "2",
     },
     "polygon-amoy": {
         name: "Polygon Amoy (Testnet)",

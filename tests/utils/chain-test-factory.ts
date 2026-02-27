@@ -15,6 +15,7 @@ import {
     ServerProcess,
     A2ATestClient,
     testMCPServer,
+    getTestBaseUrl,
     validateRegistrationFile,
     readGeneratedFile,
     fileExists,
@@ -27,6 +28,7 @@ export interface ChainTestConfig {
     chainKey: ChainKey;
     chainName: string;
     x402Supported: boolean;
+    x402Provider?: 'payai' | '4mica';
     isTestnet?: boolean; // For informational purposes
 }
 
@@ -60,7 +62,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
                 server = new ServerProcess(projectDir, 'a2a-server.ts', port);
                 await server.start();
                 
-                client = new A2ATestClient(`http://localhost:${port}`);
+                client = new A2ATestClient(getTestBaseUrl(port));
             }, 120000);
 
             afterAll(async () => {
@@ -121,7 +123,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
             });
 
             it('should return error for invalid JSON-RPC version', async () => {
-                const response = await fetch(`http://localhost:${port}/a2a`, {
+                const response = await fetch(`${getTestBaseUrl(port)}/a2a`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -137,7 +139,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
             });
 
             it('should return error for unknown method', async () => {
-                const response = await fetch(`http://localhost:${port}/a2a`, {
+                const response = await fetch(`${getTestBaseUrl(port)}/a2a`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -177,7 +179,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
                 server = new ServerProcess(projectDir, 'a2a-server.ts', port);
                 await server.start();
                 
-                client = new A2ATestClient(`http://localhost:${port}`);
+                client = new A2ATestClient(getTestBaseUrl(port));
             }, 120000);
 
             afterAll(async () => {
@@ -323,6 +325,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     projectDir = await generateTestAgent({
                         chain: config.chainKey,
                         features: ['a2a', 'x402'],
+                        x402Provider: config.x402Provider,
                         projectName: `${config.chainKey}-x402`,
                     });
                     
@@ -342,16 +345,25 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     const packageJson = JSON.parse(
                         await readGeneratedFile(projectDir, 'package.json')
                     );
-                    expect(packageJson.dependencies['@x402/express']).toBeDefined();
-                    expect(packageJson.dependencies['@x402/core']).toBeDefined();
-                    expect(packageJson.dependencies['@x402/evm']).toBeDefined();
+                    if (config.x402Provider === '4mica') {
+                        expect(packageJson.dependencies['@4mica/x402']).toBeDefined();
+                    } else {
+                        expect(packageJson.dependencies['@x402/express']).toBeDefined();
+                        expect(packageJson.dependencies['@x402/core']).toBeDefined();
+                        expect(packageJson.dependencies['@x402/evm']).toBeDefined();
+                    }
                 });
 
                 it('should include x402 middleware in server', async () => {
                     const serverCode = await readGeneratedFile(projectDir, 'src/a2a-server.ts');
-                    expect(serverCode).toContain('paymentMiddleware');
-                    expect(serverCode).toContain('x402ResourceServer');
-                    expect(serverCode).toContain('ExactEvmScheme');
+                    if (config.x402Provider === '4mica') {
+                        expect(serverCode).toContain('paymentMiddlewareFromConfig');
+                        expect(serverCode).toContain('4mica-credit');
+                    } else {
+                        expect(serverCode).toContain('paymentMiddleware');
+                        expect(serverCode).toContain('x402ResourceServer');
+                        expect(serverCode).toContain('ExactEvmScheme');
+                    }
                 });
 
                 it('should return 402 Payment Required without payment', async () => {
@@ -365,7 +377,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     
                     for (let i = 0; i < 3; i++) {
                         try {
-                            response = await fetch(`http://localhost:${port}/a2a`, {
+                            response = await fetch(`${getTestBaseUrl(port)}/a2a`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -399,6 +411,8 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     // Polygon mainnet: eip155:137, Polygon Amoy: eip155:80002
                     // SKALE Base mainnet: eip155:1187947933, SKALE Base Sepolia: eip155:324705682
                     expect(serverCode).toMatch(/eip155:(8453|84532|137|80002|1187947933|324705682)/);
+                    // Ethereum Sepolia: eip155:11155111 (4mica)
+                    expect(serverCode).toMatch(/eip155:(8453|84532|137|80002|11155111)/);
                 });
 
                 it('should configure payment to wallet address', async () => {
@@ -429,6 +443,7 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     projectDir = await generateTestAgent({
                         chain: config.chainKey,
                         features: ['a2a', 'x402'],
+                        x402Provider: config.x402Provider,
                         projectName: `${config.chainKey}-x402-paid`,
                     });
                     
@@ -452,7 +467,6 @@ export function createChainTestSuite(config: ChainTestConfig) {
 
                     // Dynamically import x402 packages
                     const { wrapFetchWithPaymentFromConfig } = await import('@x402/fetch');
-                    const { ExactEvmScheme } = await import('@x402/evm/exact/client');
                     const { CHAINS } = await import('../../dist/config.js');
                     
                     // Create account from test payer private key
@@ -463,17 +477,26 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     const network = chainConfig.x402Network;
                     
                     // Wrap fetch with x402 payment handling using the new API
+                    let schemeClient: any;
+                    if (config.x402Provider === '4mica') {
+                        const { FourMicaEvmScheme } = await import('@4mica/x402/client');
+                        schemeClient = await FourMicaEvmScheme.create(account);
+                    } else {
+                        const { ExactEvmScheme } = await import('@x402/evm/exact/client');
+                        schemeClient = new ExactEvmScheme(account);
+                    }
+
                     const fetchWithPayment = wrapFetchWithPaymentFromConfig(fetch, {
                         schemes: [
                             {
                                 network: network, // e.g., "eip155:84532" for Base Sepolia
-                                client: new ExactEvmScheme(account),
+                                client: schemeClient,
                             },
                         ],
                     });
                     
                     // Make paid request
-                    const response = await fetchWithPayment(`http://localhost:${port}/a2a`, {
+                    const response = await fetchWithPayment(`${getTestBaseUrl(port)}/a2a`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

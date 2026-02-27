@@ -4,7 +4,7 @@ import path from "path";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
-import { CHAINS, TRUST_MODELS, type ChainKey, type TrustModel } from "./config.js";
+import { CHAINS, TRUST_MODELS, type ChainKey, type TrustModel, type X402Provider } from "./config.js";
 import { SOLANA_CHAINS, isSolanaChain, type SolanaChainKey } from "./config-solana.js";
 
 function getAvailableDir(baseDir: string): string {
@@ -34,6 +34,7 @@ export interface WizardAnswers {
     trustModels: TrustModel[];
     agentWallet: string;
     generatedPrivateKey?: string;
+    x402Provider?: X402Provider;
     // OASF taxonomy (optional) - https://github.com/8004-org/oasf
     skills?: string[];
     domains?: string[];
@@ -57,6 +58,19 @@ interface RawAnswers {
     a2aStreaming?: boolean; // Optional because of 'when' condition
     chain: ChainKey | SolanaChainKey;
     trustModels: TrustModel[];
+    x402Provider?: X402Provider;
+}
+
+function getX402Providers(chainKey?: ChainKey | SolanaChainKey): X402Provider[] {
+    if (!chainKey || isSolanaChain(chainKey)) return [];
+    const chainConfig = CHAINS[chainKey as ChainKey];
+    return chainConfig.x402Providers ?? [];
+}
+
+function getDefaultX402Provider(chainKey?: ChainKey | SolanaChainKey): X402Provider | undefined {
+    if (!chainKey || isSolanaChain(chainKey)) return undefined;
+    const chainConfig = CHAINS[chainKey as ChainKey];
+    return chainConfig.x402DefaultProvider ?? chainConfig.x402Providers?.[0];
 }
 
 export async function runWizard(): Promise<WizardAnswers> {
@@ -147,8 +161,32 @@ export async function runWizard(): Promise<WizardAnswers> {
                     { name: "MCP Server (Model Context Protocol tools)", value: "mcp", checked: false },
                     x402Supported
                         ? { name: "x402 Payments (USDC micropayments)", value: "x402", checked: false }
-                        : { name: "x402 Payments", value: "x402", disabled: "Not available on Ethereum" },
+                        : { name: "x402 Payments", value: "x402", disabled: "Not available on selected chain" },
                 ];
+            },
+        },
+        {
+            type: "list",
+            name: "x402Provider",
+            message: "x402 provider:",
+            choices: (ans: Partial<RawAnswers>) => {
+                const providers = getX402Providers(ans.chain);
+                return providers.map((provider) => {
+                    if (provider === "4mica") {
+                        return {
+                            name: "4mica (credit, Ethereum Sepolia / Polygon Amoy)",
+                            value: "4mica",
+                        };
+                    }
+                    return {
+                        name: "PayAI (exact, Base / Polygon)",
+                        value: "payai",
+                    };
+                });
+            },
+            when: (ans: Partial<RawAnswers>) => {
+                const providers = getX402Providers(ans.chain);
+                return (ans.features?.includes("x402") ?? false) && providers.length > 1;
             },
         },
         {
@@ -195,11 +233,19 @@ export async function runWizard(): Promise<WizardAnswers> {
         }
     }
 
+    let x402Provider: X402Provider | undefined = answers.x402Provider;
+    if (answers.features.includes("x402")) {
+        if (!x402Provider) {
+            x402Provider = getDefaultX402Provider(answers.chain);
+        }
+    }
+
     return {
         ...answers,
         projectDir,
         agentWallet,
         generatedPrivateKey,
+        x402Provider,
         // Default to false if A2A not selected (question was skipped)
         a2aStreaming: answers.a2aStreaming ?? false,
     };

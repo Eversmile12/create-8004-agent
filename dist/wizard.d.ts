@@ -1,4 +1,4 @@
-import { type ChainKey, type TrustModel } from "./config.js";
+import { type ChainKey, type TrustModel, type X402Provider } from "./config.js";
 import { type SolanaChainKey } from "./config-solana.js";
 export interface WizardAnswers {
     projectDir: string;
@@ -11,6 +11,7 @@ export interface WizardAnswers {
     trustModels: TrustModel[];
     agentWallet: string;
     generatedPrivateKey?: string;
+    x402Provider?: X402Provider;
     skills?: string[];
     domains?: string[];
 }

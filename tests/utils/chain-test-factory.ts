@@ -32,6 +32,14 @@ export interface ChainTestConfig {
     isTestnet?: boolean; // For informational purposes
 }
 
+// agent0-sdk doesn't support Monad yet, so Monad uses direct viem contract
+// calls instead. This means registration tests need different assertions
+// (no SDK, no registerIPFS, no setTrust, no OASF section in README).
+// See: src/templates/monad.ts
+function isMonadChain(chainKey: string): boolean {
+    return chainKey === 'monad-mainnet' || chainKey === 'monad-testnet';
+}
+
 /**
  * Create a complete test suite for a chain
  */
@@ -276,13 +284,20 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     features: ['a2a', 'mcp'],
                     projectName: `${config.chainKey}-registration`,
                 });
-                
+
                 expect(await fileExists(projectDir, 'src/register.ts')).toBe(true);
-                
+
                 const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
-                expect(registerCode).toContain('agent0-sdk');
-                expect(registerCode).toContain('registerIPFS');
-                expect(registerCode).toContain(config.chainKey.includes('mainnet') ? 'chainId: ' : 'chainId: ');
+                if (isMonadChain(config.chainKey)) {
+                    // Monad uses direct viem contract calls instead of agent0-sdk
+                    expect(registerCode).toContain('viem');
+                    expect(registerCode).toContain('uploadToIPFS');
+                    expect(registerCode).toContain('defineChain');
+                } else {
+                    expect(registerCode).toContain('agent0-sdk');
+                    expect(registerCode).toContain('registerIPFS');
+                    expect(registerCode).toContain('chainId');
+                }
             });
 
             it('should have correct chain configuration', async () => {
@@ -291,12 +306,18 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     features: ['a2a'],
                     projectName: `${config.chainKey}-chain-config`,
                 });
-                
+
                 const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
-                
-                // Verify SDK is initialized with correct chain
-                expect(registerCode).toContain('SDK');
-                expect(registerCode).toContain('chainId');
+
+                if (isMonadChain(config.chainKey)) {
+                    // Monad uses viem's defineChain with direct contract interaction
+                    expect(registerCode).toContain('defineChain');
+                    expect(registerCode).toContain('IDENTITY_REGISTRY');
+                } else {
+                    // Other chains use Agent0 SDK
+                    expect(registerCode).toContain('SDK');
+                    expect(registerCode).toContain('chainId');
+                }
             });
 
             it('should have correct trust models', async () => {
@@ -305,9 +326,14 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     features: ['a2a'],
                     projectName: `${config.chainKey}-trust`,
                 });
-                
+
                 const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
-                expect(registerCode).toContain('setTrust');
+                if (isMonadChain(config.chainKey)) {
+                    // Monad stores trust models in metadata
+                    expect(registerCode).toContain('supportedTrust');
+                } else {
+                    expect(registerCode).toContain('setTrust');
+                }
             });
         });
 
@@ -538,23 +564,25 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     features: ['a2a', 'mcp'],
                     projectName: `${config.chainKey}-readme`,
                 });
-                
+
                 const readme = await readGeneratedFile(projectDir, 'README.md');
-                
+
                 // Should have quick start section
                 expect(readme).toContain('Quick Start');
                 expect(readme).toContain('Configure environment');
                 expect(readme).toContain('PINATA_JWT');
                 expect(readme).toContain('OPENAI_API_KEY');
-                
+
                 // Should have chain-specific funding info
                 expect(readme).toContain('Fund your wallet');
-                
+
                 // Should mention registration
                 expect(readme).toContain('npm run register');
-                
-                // Should have OASF info
-                expect(readme).toContain('OASF');
+
+                // OASF section is only in SDK-based chains (not Monad)
+                if (!isMonadChain(config.chainKey)) {
+                    expect(readme).toContain('OASF');
+                }
             });
 
             it('should include correct chain name in README', async () => {

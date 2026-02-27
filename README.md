@@ -85,13 +85,13 @@ my-agent/
 
 ### EVM Chains
 
-| Chain            | Identity Registry                            | Status       |
-| ---------------- | -------------------------------------------- | ------------ |
-| ETH Sepolia      | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| Base Sepolia     | Coming soon                                  | 🔜 Pending   |
-| Linea Sepolia    | Coming soon                                  | 🔜 Pending   |
-| Polygon Amoy     | Coming soon                                  | 🔜 Pending   |
-| Avalanche C-Chain | Via agent0-sdk (chainId 43114)               | ✅ Available |
+| Chain              | Identity Registry                            | Status       |
+| ------------------ | -------------------------------------------- | ------------ |
+| ETH Sepolia        | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
+| Base Sepolia       | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
+| SKALE Base         | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
+| SKALE Base Sepolia | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
+| Avalanche C-Chain  | Via agent0-sdk (chainId 43114)               | ✅ Available |
 | Avalanche Fuji     | Via agent0-sdk (chainId 43113)               | ✅ Available |
 
 ### Solana
@@ -208,8 +208,8 @@ curl -X POST http://localhost:3000/a2a \
 | Base Sepolia | PayAI | ✅ Testnet |
 | Polygon Mainnet | PayAI | ✅ Production |
 | Polygon Amoy | PayAI | ✅ Testnet |
-| Ethereum Sepolia | 4mica | ✅ Testnet |
-| Polygon Amoy | 4mica | ✅ Testnet |
+| SKALE Base | PayAI | ✅ Production |
+| SKALE Base Sepolia | PayAI | ✅ Testnet |
 
 When enabled, the A2A server uses x402 middleware for micropayments:
 - Per-request pricing (default: $0.001 USDC)

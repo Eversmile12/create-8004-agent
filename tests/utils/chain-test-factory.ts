@@ -23,6 +23,7 @@ import {
     cleanupTestOutput,
 } from './test-helpers.js';
 import type { ChainKey } from '../../dist/config.js';
+import { isTapSupported, getTapGateway, TAP_CONSTANTS } from '../../dist/config.js';
 
 export interface ChainTestConfig {
     chainKey: ChainKey;
@@ -526,6 +527,69 @@ export function createChainTestSuite(config: ChainTestConfig) {
                     const agentMessage = data.result.messages[1];
                     expect(agentMessage.role).toBe('agent');
                     expect(agentMessage.parts[0].text).toContain('[MOCK]');
+                });
+            });
+        }
+
+        // ================================================================
+        // TAP REGISTRATION (Push Chain)
+        // ================================================================
+        if (isTapSupported(config.chainKey)) {
+            describe('TAP Registration', () => {
+                it('should include TAP registration code in register.ts', async () => {
+                    const projectDir = await generateTestAgent({
+                        chain: config.chainKey,
+                        features: ['a2a'],
+                        projectName: `${config.chainKey}-tap-reg`,
+                    });
+                    const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
+                    expect(registerCode).toContain('TAP Universal Agent Registration');
+                    expect(registerCode).toContain('sendUniversalTx');
+                });
+
+                it('should have correct gateway address', async () => {
+                    const projectDir = await generateTestAgent({
+                        chain: config.chainKey,
+                        features: ['a2a'],
+                        projectName: `${config.chainKey}-tap-gw`,
+                    });
+                    const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
+                    const expectedGateway = getTapGateway(config.chainKey);
+                    expect(registerCode).toContain(expectedGateway!);
+                });
+
+                it('should have correct Push Chain config', async () => {
+                    const projectDir = await generateTestAgent({
+                        chain: config.chainKey,
+                        features: ['a2a'],
+                        projectName: `${config.chainKey}-tap-push`,
+                    });
+                    const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
+                    expect(registerCode).toContain(TAP_CONSTANTS.AGENT_REGISTRY);
+                    expect(registerCode).toContain(TAP_CONSTANTS.PUSH_CHAIN_RPC);
+                    expect(registerCode).toContain(TAP_CONSTANTS.UEA_FACTORY);
+                });
+
+                it('should have viem dependency', async () => {
+                    const projectDir = await generateTestAgent({
+                        chain: config.chainKey,
+                        features: ['a2a'],
+                        projectName: `${config.chainKey}-tap-viem`,
+                    });
+                    const pkg = JSON.parse(await readGeneratedFile(projectDir, 'package.json'));
+                    expect(pkg.dependencies.viem).toBeDefined();
+                });
+            });
+        } else {
+            describe('TAP Registration (not supported)', () => {
+                it('should NOT include TAP code', async () => {
+                    const projectDir = await generateTestAgent({
+                        chain: config.chainKey,
+                        features: ['a2a'],
+                        projectName: `${config.chainKey}-no-tap`,
+                    });
+                    const registerCode = await readGeneratedFile(projectDir, 'src/register.ts');
+                    expect(registerCode).not.toContain('TAP Universal Agent Registration');
                 });
             });
         }

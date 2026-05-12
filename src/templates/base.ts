@@ -1,6 +1,7 @@
 import type { WizardAnswers } from "../wizard.js";
 import { hasFeature } from "../wizard.js";
-import { CHAINS, type X402Provider } from "../config.js";
+import { CHAINS, type X402Provider, getTapGateway } from "../config.js";
+import { generateTapRegistrationBlock, generateAskYesNoHelper } from "./tap.js";
 
 type ChainConfig = (typeof CHAINS)[keyof typeof CHAINS];
 
@@ -78,6 +79,10 @@ export function generatePackageJson(answers: WizardAnswers): string {
         dependencies["@modelcontextprotocol/sdk"] = "^1.0.0";
     }
 
+    if (getTapGateway(answers.chain)) {
+        dependencies["viem"] = "^2.0.0";
+    }
+
     if (hasFeature(answers, "x402")) {
         const provider = getX402Provider(answers, CHAINS[answers.chain as keyof typeof CHAINS]);
         if (provider === "4mica") {
@@ -140,6 +145,7 @@ export function generateRegisterScript(answers: WizardAnswers, chain: ChainConfi
     const hasA2A = hasFeature(answers, "a2a");
     const hasMCP = hasFeature(answers, "mcp");
     const hasX402 = hasFeature(answers, "x402");
+    const tapGateway = getTapGateway(answers.chain);
 
     // Build trust model arguments
     const trustArgs = [
@@ -167,7 +173,7 @@ export function generateRegisterScript(answers: WizardAnswers, chain: ChainConfi
 
 import 'dotenv/config';
 import { SDK } from 'agent0-sdk';
-
+${tapGateway ? generateAskYesNoHelper() : ""}
 // ============================================================================
 // Agent Configuration
 // ============================================================================
@@ -283,6 +289,7 @@ ${
   console.log('   1. Update AGENT_CONFIG endpoints with your production URLs');
   console.log('   2. Run \`npm run start:a2a\` to start your A2A server');
   console.log('   3. Deploy your agent to a public URL');
+${tapGateway ? generateTapRegistrationBlock(tapGateway, chain.chainId, chain.name) : ""}
 }
 
 main().catch((error) => {
@@ -463,6 +470,7 @@ This will:
 - Upload your agent metadata to IPFS
 - Register your agent on ${chain.name}
 - Output your agent ID and 8004scan link
+${getTapGateway(answers.chain) ? `- Prompt you to create a **TAP Universal Agent** on Push Chain` : ""}
 ${
     hasA2A
         ? `
@@ -522,6 +530,21 @@ Payment configuration in \`.env\`:
 - \`X402_PAYEE_ADDRESS\` - Wallet to receive payments
 - \`X402_PRICE\` - Price per request (e.g., $0.001)
 ${x402Provider === "4mica" ? "- `X402_TAB_ENDPOINT` - Public tab endpoint advertised to clients" : ""}
+`
+        : ""
+}
+${
+    getTapGateway(answers.chain)
+        ? `## TAP Universal Agent (Push Chain)
+
+This agent was generated for a TAP-supported chain. When you run \\\`npm run register\\\`,
+you'll be prompted to also create a canonical identity on Push Chain.
+
+This gives you a **Universal Agent ID** that works across all chains. You can later
+bind agents from other chains to this same identity, proving single ownership.
+
+No Push Chain tokens needed — the registration goes through the Universal Gateway
+on ${chain.name}.
 `
         : ""
 }

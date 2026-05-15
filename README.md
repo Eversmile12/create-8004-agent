@@ -1,13 +1,18 @@
 # create-8004-agent
 
-CLI tool to scaffold [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) compliant AI agents with A2A, MCP, and x402 payment support.
+CLI tool to scaffold [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) compliant AI agents with A2A, MCP, x402 payment, and [TAP](https://push.org) (Trustless Agents Plus) universal identity support.
 
-**Supports both EVM chains and Solana.**
+**Supports EVM chains, Solana, and Push Chain universal agent registration.**
 
 ## Table of Contents
 - [What is ERC-8004?](#what-is-erc-8004)
+- [What is TAP?](#what-is-tap)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [CLI Sub-Commands](#cli-sub-commands)
+  - [register — TAP Registration](#register--tap-registration-for-existing-agents)
+  - [bind — Cross-Chain Binding](#bind--bind-cross-chain-agents)
+  - [profile — Agent Profile Lookup](#profile--query-agent-profile)
 - [What Gets Generated](#what-gets-generated)
 - [Wizard Options](#wizard-options)
 - [Supported Chains](#supported-chains)
@@ -21,7 +26,6 @@ CLI tool to scaffold [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) complia
 - [Development](#development)
 - [Resources](#resources)
 
-
 ## What is ERC-8004?
 
 ERC-8004 is a protocol for discovering and trusting AI agents across organizational boundaries. It provides:
@@ -29,6 +33,25 @@ ERC-8004 is a protocol for discovering and trusting AI agents across organizatio
 -   **Identity Registry** - On-chain agent registration as NFTs
 -   **Reputation Registry** - Feedback and trust signals
 -   **Validation Registry** - Stake-secured verification
+
+## What is TAP?
+
+**TAP (Trustless Agents Plus)** is a Universal Agent Identity system on [Push Chain](https://push.org). It solves the fragmentation problem: if you register the same agent on Ethereum Sepolia, Base Sepolia, and other chains, each chain gives it a different agent ID. TAP gives your agent a single **Universal Agent ID** that works across all chains.
+
+**How it works:**
+
+1. **Register** your agent on Push Chain's AgentRegistry via the Universal Gateway on your source chain. No Push Chain tokens needed — you stay on your chain, and Push Chain's TSS network relays the transaction.
+2. Your wallet gets a deterministic **UEA (Universal Executor Account)** on Push Chain. Your Universal Agent ID is derived from this address.
+3. **Bind** agents from other chains to this canonical identity using EIP-712 signatures, proving you own them all.
+4. Anyone can **query** your agent's unified profile — identity, cross-chain bindings, reputation scores, and slash history — from a single ID.
+
+**Supported chains for TAP registration:**
+
+| Chain | Universal Gateway |
+| ----- | ----------------- |
+| Ethereum Sepolia | `0x05bD7a3D18324c1F7e216f7fBF2b15985aE5281A` |
+| Base Sepolia | `0xFD4fef1F43aFEc8b5bcdEEc47f35a1431479aC16` |
+
 ## Prerequisites
 
 Before using the generator, ensure you have:
@@ -38,12 +61,202 @@ Before using the generator, ensure you have:
 
 ## Quick Start
 
+### Scaffold a new agent
+
 ```bash
 npx create-8004-agent
 ```
 
-That's it! The wizard will guide you through creating your agent.
-If you want 4mica-powered x402 payments, choose a supported chain (Ethereum Sepolia or Polygon Amoy), enable `x402 payments`, and select `4mica` as the provider when prompted.
+The wizard guides you through creating a new ERC-8004 agent project. On TAP-supported chains (Ethereum Sepolia, Base Sepolia), the generated `register.ts` will also prompt you to create a TAP Universal Agent on Push Chain after the on-chain registration.
+
+### Manage existing agents
+
+If you already have an ERC-8004 agent registered on-chain, use the sub-commands directly:
+
+```bash
+# Register your existing agent on Push Chain (get a Universal Agent ID)
+npx create-8004-agent register
+
+# Bind an agent from another chain to your TAP identity
+npx create-8004-agent bind
+
+# Look up any agent's full profile (no wallet needed)
+npx create-8004-agent profile
+
+# Quick lookup by Universal Agent ID
+npx create-8004-agent profile 6718082
+```
+
+```bash
+# See all available commands
+npx create-8004-agent --help
+```
+
+## CLI Sub-Commands
+
+### `register` — TAP Registration for Existing Agents
+
+Registers your existing ERC-8004 agent on Push Chain's AgentRegistry, giving it a Universal Agent ID.
+
+**When to use:** You already have an ERC-8004 agent on a supported chain and want a canonical TAP identity.
+
+**What it does:**
+1. Prompts for chain, agent ID, and private key
+2. Verifies you own the agent (calls `ownerOf` on the source chain)
+3. Fetches agent metadata from IPFS and hashes it
+4. Checks if you're already registered (offers to update if so)
+5. Sends the registration through the Universal Gateway
+6. Polls Push Chain for confirmation (~30 seconds)
+7. Prints your Universal Agent ID and UEA address
+
+**Example:**
+
+```
+$ npx create-8004-agent register
+
+🤖 TAP Universal Agent Registration
+   Register your existing ERC-8004 agent on Push Chain
+
+? Which chain is your agent on? Ethereum Sepolia
+? Your ERC-8004 Agent ID on that chain: 4588
+? Private key (or set PRIVATE_KEY env var): ****
+
+Verifying agent ownership...
+✓ Agent 4588 on Ethereum Sepolia is owned by 0x1afC...b47c
+
+Fetching agent metadata from chain...
+✓ Agent URI: ipfs://bafkrei...
+✓ Metadata fetched from IPFS (2.3 KB)
+
+Sending TAP registration via Universal Gateway...
+✓ Gateway tx submitted: 0xfe39...b56e
+  Waiting for Push Chain confirmation (~30 seconds)...
+
+✅ TAP Universal Agent created!
+
+🆔 Universal Agent ID: 6718082
+🔗 UEA Address: 0x2Cd9...2F82
+📄 Agent URI: ipfs://bafkrei...
+```
+
+**Tip:** Set `PRIVATE_KEY` as an environment variable to skip the interactive prompt.
+
+---
+
+### `bind` — Bind Cross-Chain Agents
+
+Links an agent on any EVM chain to your canonical TAP identity using an EIP-712 signature.
+
+**When to use:** You have agents on multiple chains and want to prove they all belong to the same identity. You must `register` first.
+
+**Prerequisites:**
+- A TAP registration (run `register` first)
+- Ownership of the agent you're binding (same wallet)
+- Gas on the chain you originally registered from (the bind tx goes through that chain's gateway)
+
+**What it does:**
+1. Auto-discovers your TAP identity by checking all gateway chains
+2. Prompts for the target chain, agent ID, and registry address
+3. Verifies you own the agent on the target chain
+4. Checks the agent isn't already bound
+5. Signs an EIP-712 typed data proof (domain: Push Chain 42101)
+6. Sends the bind through the Universal Gateway
+7. Polls Push Chain for confirmation
+
+**Example:**
+
+```
+$ npx create-8004-agent bind
+
+🔗 TAP Agent Binding
+   Link a source-chain agent to your canonical TAP identity
+
+? Private key (or set PRIVATE_KEY env var): ****
+
+Discovering your TAP identity...
+✓ Your UEA: 0x2Cd9...2F82
+✓ Universal Agent ID: 6718082
+
+? Which chain has the agent you want to bind? Base Sepolia
+? Agent ID on that chain: 5807
+? ERC-8004 Registry address on that chain: 0x8004...9e
+
+Verifying agent ownership...
+✓ Agent 5807 on Base Sepolia is owned by 0x1afC...b47c
+
+Signing EIP-712 bind proof...
+✓ Signature created (domain: Push Chain 42101)
+
+Sending bind transaction via Universal Gateway...
+✓ Gateway tx submitted: 0x0a94...4c0a
+
+✅ Agent bound successfully!
+
+🔗 Binding: Base Sepolia Agent #5807 → TAP Agent #6718082
+```
+
+**Important:** The `canonicalUEA` in the EIP-712 struct is your UEA address (not your EOA). The contract verifies the signature against the `ownerKey` stored during registration.
+
+---
+
+### `profile` — Query Agent Profile
+
+Displays an agent's full TAP profile: identity, cross-chain bindings, reputation, and slash history. **No private key or wallet needed** — this is a read-only command.
+
+**Three lookup modes:**
+
+| Mode | Input | Use case |
+| ---- | ----- | -------- |
+| TAP Universal Agent | Universal Agent ID | You know the TAP agent ID |
+| Source-chain agent | Chain + agent ID | You know the ERC-8004 agent on a specific chain |
+| Wallet lookup | Wallet address + chain | You know the owner's wallet |
+
+**Positional shortcut:**
+
+```bash
+# Skip the interactive prompt — directly look up by Universal Agent ID
+npx create-8004-agent profile 6718082
+```
+
+**Example output:**
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  TAP AGENT FULL PROFILE                                        ║
+╠══════════════════════════════════════════════════════════════════╣
+║  🤖 TAP Agent                                                  ║
+║  UEA: 0x2Cd9b0944ce013ebB39E0A4f5cd7717c35CB2F82              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─── IDENTITY ──────────────────────────────────────────────────┐
+│  Agent ID          6718082                                    │
+│  Registered        ✓ true                                     │
+│  Origin            eip155:11155111 (Ethereum Sepolia)         │
+│  Agent URI         ipfs://bafkrei...om7nkm                    │
+└───────────────────────────────────────────────────────────────┘
+
+┌─── CROSS-CHAIN BINDINGS (2) ─────────────────────────────────┐
+│  Chain                  Agent ID    Status                    │
+│  ─────────────────────────────────────────                   │
+│  Ethereum Sepolia       4588        ✓ verified               │
+│  Base Sepolia           5807        ✓ verified               │
+└───────────────────────────────────────────────────────────────┘
+
+┌─── REPUTATION ───────────────────────────────────────────────┐
+│  Score: ████████████████████░░░░  80.59%                     │
+│         8059 / 10000 bps                                     │
+│                                                              │
+│  Per-Chain Breakdown:                                        │
+│  Ethereum Sepolia   ██████████████░░  95/100  250fb          │
+│  Base Sepolia       ███████████████░  97/100  350fb          │
+└───────────────────────────────────────────────────────────────┘
+
+┌─── SLASH HISTORY ────────────────────────────────────────────┐
+│  No slashes recorded ✓                                       │
+└───────────────────────────────────────────────────────────────┘
+```
+
+**Source-chain mode:** If you look up a source-chain agent, the command checks for a TAP binding and tells you the Universal Agent ID if one exists.
 
 ## What Gets Generated
 
@@ -56,7 +269,7 @@ my-agent/
 ├── registration.json          # ERC-8004 metadata
 ├── tsconfig.json
 ├── src/
-│   ├── register.ts            # On-chain registration script
+│   ├── register.ts            # On-chain registration (+ TAP on supported chains)
 │   ├── agent.ts               # LLM agent (OpenAI)
 │   ├── a2a-server.ts          # A2A protocol server (optional)
 │   ├── mcp-server.ts          # MCP protocol server (optional)
@@ -64,6 +277,8 @@ my-agent/
 └── .well-known/
     └── agent-card.json        # A2A discovery card
 ```
+
+On TAP-supported chains (Ethereum Sepolia, Base Sepolia), the generated `register.ts` includes a TAP registration section that runs after the ERC-8004 registration. It prompts: *"Also create a TAP Universal Agent on Push Chain?"* — if you say yes, it sends the registration via the Universal Gateway and prints your Universal Agent ID.
 
 ## Wizard Options
 
@@ -85,20 +300,36 @@ my-agent/
 
 ### EVM Chains
 
-| Chain              | Identity Registry                            | Status       |
-| ------------------ | -------------------------------------------- | ------------ |
-| ETH Sepolia        | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| Base Sepolia       | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| SKALE Base         | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| SKALE Base Sepolia | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅ Available |
-| Avalanche C-Chain  | Via agent0-sdk (chainId 43114)               | ✅ Available |
-| Avalanche Fuji     | Via agent0-sdk (chainId 43113)               | ✅ Available |
+| Chain              | Identity Registry                            | TAP Gateway | x402 |
+| ------------------ | -------------------------------------------- | ----------- | ---- |
+| ETH Sepolia        | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅          | 4mica |
+| Base Sepolia       | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | ✅          | PayAI |
+| Polygon Amoy       | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | —           | PayAI, 4mica |
+| Avalanche Fuji     | Via agent0-sdk (chainId 43113)               | —           | — |
+| Avalanche C-Chain  | Via agent0-sdk (chainId 43114)               | —           | — |
+| Monad Testnet      | Via agent0-sdk (chainId 10143)               | —           | — |
+| Base Mainnet       | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | —           | PayAI |
+| Polygon Mainnet    | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | —           | PayAI |
+| SKALE Base         | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | —           | PayAI |
+| SKALE Base Sepolia | `0x8004A818BFB912233c491871b3d84c89A494BD9e` | —           | PayAI |
+
+**TAP Gateway ✅** = supports `register`, `bind`, and automatic TAP registration during scaffold. Chains without a gateway can still have agents **bound** to a TAP identity — the bind transaction is sent from a gateway chain, not from the target chain.
 
 ### Solana
 
 | Network | Program ID                                     |
 | ------- | ---------------------------------------------- |
 | Devnet  | `HvF3JqhahcX7JfhbDRYYCJ7S3f6nJdrqu5yi9shyTREp` |
+
+### Push Chain (TAP)
+
+| Contract | Address |
+| -------- | ------- |
+| AgentRegistry | `0x13499d36729467bd5C6B44725a10a0113cE47178` |
+| ReputationRegistry | `0x90B484063622289742516c5dDFdDf1C1A3C2c50C` |
+| UEA Factory | `0x00000000000000000000000000000000000000eA` |
+
+Push Chain Donut Testnet — Chain ID: `42101` — RPC: `https://evm.donut.rpc.push.org/`
 
 ## Generated Project Usage
 
@@ -134,9 +365,12 @@ npm run register
 
 **EVM chains:** Uploads metadata to IPFS and mints an NFT on the Identity Registry.
 
+**EVM chains with TAP support (Sepolia, Base Sepolia):** After the ERC-8004 registration, you'll be prompted: *"Also create a TAP Universal Agent on Push Chain?"* If you accept, the script sends a registration through the Universal Gateway and prints your Universal Agent ID. No Push Chain tokens needed.
+
 **Solana:** Validates metadata using `buildRegistrationFileJson()`, uploads to IPFS, and mints a Metaplex Core NFT via the 8004 program.
 
 After registration, view your agent on [8004scan.io](https://www.8004scan.io/).
+
 ### 2(b). Updating Your Agent (Optional)
 
 If you update your agent's name, description, image, or [OASF](https://github.com/8004-org/oasf) skills in `src/register.ts`, you need to sync these changes on-chain:
@@ -320,6 +554,7 @@ If `TEST_PAYER_PRIVATE_KEY` is not set, x402 paid request tests will be skipped 
 -   [x402 Protocol](https://x402.org)
 -   [PayAI Facilitator](https://payai.network) - x402 facilitator for Base, Polygon
 -   [4mica Facilitator](https://x402.4mica.xyz) - x402 facilitator for Ethereum Sepolia, Polygon Amoy
+-   [Push Chain](https://push.org) - TAP Universal Agent Identity
 -   [8004-solana SDK](https://github.com/8004-ai/8004-solana) - Solana implementation
 
 ## License

@@ -1,5 +1,6 @@
 import { hasFeature } from "../wizard.js";
-import { CHAINS } from "../config.js";
+import { CHAINS, getTapGateway } from "../config.js";
+import { generateTapRegistrationBlock, generateAskYesNoHelper } from "./tap.js";
 function getX402Provider(answers, chain) {
     if (!hasFeature(answers, "x402"))
         return null;
@@ -13,6 +14,8 @@ function getFundingInstructions(chain) {
         8453: "ETH", // Base
         137: "MATIC", // Polygon
         143: "MON", // Monad
+        1187947933: "CREDIT", // SKALE Base
+        43114: "AVAX", // Avalanche C-Chain
     };
     if (mainnetChains[chain.chainId]) {
         const token = mainnetChains[chain.chainId];
@@ -24,6 +27,8 @@ function getFundingInstructions(chain) {
         84532: "https://www.coinbase.com/faucets/base-ethereum-goerli-faucet", // Base Sepolia
         80002: "https://faucet.polygon.technology/", // Polygon Amoy
         10143: "https://faucet.monad.xyz/", // Monad Testnet
+        324705682: "https://base-sepolia-faucet.skale.space/", // SKALE Base Sepolia
+        43113: "https://faucet.avax.network/", // Avalanche Fuji
     };
     const faucetUrl = faucets[chain.chainId];
     if (faucetUrl) {
@@ -59,6 +64,9 @@ export function generatePackageJson(answers) {
     if (hasFeature(answers, "mcp")) {
         scripts["start:mcp"] = "tsx src/mcp-server.ts";
         dependencies["@modelcontextprotocol/sdk"] = "^1.0.0";
+    }
+    if (getTapGateway(answers.chain)) {
+        dependencies["viem"] = "^2.0.0";
     }
     if (hasFeature(answers, "x402")) {
         const provider = getX402Provider(answers, CHAINS[answers.chain]);
@@ -113,6 +121,7 @@ export function generateRegisterScript(answers, chain) {
     const hasA2A = hasFeature(answers, "a2a");
     const hasMCP = hasFeature(answers, "mcp");
     const hasX402 = hasFeature(answers, "x402");
+    const tapGateway = getTapGateway(answers.chain);
     // Build trust model arguments
     const trustArgs = [
         answers.trustModels.includes("reputation"),
@@ -138,7 +147,7 @@ export function generateRegisterScript(answers, chain) {
 
 import 'dotenv/config';
 import { SDK } from 'agent0-sdk';
-
+${tapGateway ? generateAskYesNoHelper() : ""}
 // ============================================================================
 // Agent Configuration
 // ============================================================================
@@ -224,12 +233,19 @@ ${hasA2A
   const txHandle = await agent.registerIPFS();
   const { result } = await txHandle.waitMined();
 
-  // Set agent wallet via ERC-8004 v2 setAgentWallet() (not deprecated metadata)
-  // This uses EIP-712 signature verification for security
+  // Set agent wallet via ERC-8004 v2 setAgentWallet()
   console.log('');
   console.log('🔐 Setting agent wallet via setAgentWallet()...');
-  const walletTx = await agent.setWallet('${answers.agentWallet}');
-  await walletTx.waitMined();
+  try {
+    const walletTx = await agent.setWallet('${answers.agentWallet}');
+    if (walletTx?.waitMined) {
+      await walletTx.waitMined();
+    }
+    console.log('✅ Agent wallet set.');
+  } catch (walletErr: any) {
+    console.log('⚠️  setWallet skipped:', walletErr.message || walletErr);
+    console.log('   (agent is still registered — wallet can be set later)');
+  }
 
   // Output results
   console.log('');
@@ -248,6 +264,7 @@ ${hasA2A
   console.log('   1. Update AGENT_CONFIG endpoints with your production URLs');
   console.log('   2. Run \`npm run start:a2a\` to start your A2A server');
   console.log('   3. Deploy your agent to a public URL');
+${tapGateway ? generateTapRegistrationBlock(tapGateway, chain.chainId, chain.name) : ""}
 }
 
 main().catch((error) => {
@@ -424,6 +441,7 @@ This will:
 - Upload your agent metadata to IPFS
 - Register your agent on ${chain.name}
 - Output your agent ID and 8004scan link
+${getTapGateway(answers.chain) ? `- Prompt you to create a **TAP Universal Agent** on Push Chain` : ""}
 ${hasA2A
         ? `
 ### 5. Start the A2A server
@@ -476,6 +494,19 @@ Payment configuration in \`.env\`:
 - \`X402_PAYEE_ADDRESS\` - Wallet to receive payments
 - \`X402_PRICE\` - Price per request (e.g., $0.001)
 ${x402Provider === "4mica" ? "- `X402_TAB_ENDPOINT` - Public tab endpoint advertised to clients" : ""}
+`
+        : ""}
+${getTapGateway(answers.chain)
+        ? `## TAP Universal Agent (Push Chain)
+
+This agent was generated for a TAP-supported chain. When you run \\\`npm run register\\\`,
+you'll be prompted to also create a canonical identity on Push Chain.
+
+This gives you a **Universal Agent ID** that works across all chains. You can later
+bind agents from other chains to this same identity, proving single ownership.
+
+No Push Chain tokens needed — the registration goes through the Universal Gateway
+on ${chain.name}.
 `
         : ""}
 ## OASF Skills & Domains (Optional)

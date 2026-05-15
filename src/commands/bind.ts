@@ -11,6 +11,7 @@ import {
     TAP_CONSTANTS,
     TAP_GATEWAYS,
     getTapGateway,
+    getErc8004Registry,
     type ChainKey,
 } from "../config.js";
 import {
@@ -125,7 +126,6 @@ export async function runBindCommand(): Promise<void> {
     const answers = await inquirer.prompt<{
         chain: string;
         agentId: string;
-        registryAddress: string;
     }>([
         {
             type: "list",
@@ -145,17 +145,9 @@ export async function runBindCommand(): Promise<void> {
                     : "Enter a valid agent ID";
             },
         },
-        {
-            type: "input",
-            name: "registryAddress",
-            message: "ERC-8004 Registry address on that chain:",
-            default: TAP_CONSTANTS.ERC8004_IDENTITY_TESTNET,
-            validate: (input: string) =>
-                /^0x[a-fA-F0-9]{40}$/.test(input)
-                    ? true
-                    : "Enter a valid address",
-        },
     ]);
+
+    const registryAddress = getErc8004Registry(answers.chain);
 
     const targetChain = CHAINS[answers.chain as ChainKey];
     const targetClient = createPublicClient({
@@ -167,7 +159,7 @@ export async function runBindCommand(): Promise<void> {
     let owner: string;
     try {
         owner = await targetClient.readContract({
-            address: answers.registryAddress as `0x${string}`,
+            address: registryAddress,
             abi: erc8004Abi,
             functionName: "ownerOf",
             args: [BigInt(answers.agentId)],
@@ -205,7 +197,7 @@ export async function runBindCommand(): Promise<void> {
         args: [
             "eip155",
             String(targetChain.chainId),
-            answers.registryAddress as `0x${string}`,
+            registryAddress,
             BigInt(answers.agentId),
         ],
     });
@@ -252,7 +244,7 @@ export async function runBindCommand(): Promise<void> {
             chainNamespace: "eip155",
             chainId: String(targetChain.chainId),
             registryAddress:
-                answers.registryAddress as `0x${string}`,
+                registryAddress,
             boundAgentId: BigInt(answers.agentId),
             nonce,
             deadline,
@@ -282,7 +274,7 @@ export async function runBindCommand(): Promise<void> {
         chainNamespace: "eip155",
         chainId: String(targetChain.chainId),
         registryAddress:
-            answers.registryAddress as `0x${string}`,
+            registryAddress,
         boundAgentId: BigInt(answers.agentId),
         proofType: 0,
         proofData: signature,

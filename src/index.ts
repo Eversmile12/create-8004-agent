@@ -133,6 +133,25 @@ async function runScaffoldWizard(): Promise<void> {
     console.log("");
     step++;
 
+    if (isTapSupported(answers.chain)) {
+        console.log(chalk.bold.white(`${step}. Create Universal Agent ID with TAP`));
+        console.log(chalk.cyan("   npx create-8004-agent register"));
+        console.log(chalk.gray("   → Registers your agent on Push Chain via the Universal Gateway"));
+        console.log(chalk.gray("   → Gives you a single identity that works across all chains"));
+        console.log("");
+
+        console.log(chalk.bold.white(`   ${step}a. Bind your multi-chain agents with TAP`));
+        console.log(chalk.cyan("       npx create-8004-agent bind"));
+        console.log(chalk.gray("       → Link agents from other chains to your TAP identity"));
+        console.log("");
+
+        console.log(chalk.bold.white(`   ${step}b. Query full agent profile with TAP`));
+        console.log(chalk.cyan("       npx create-8004-agent profile"));
+        console.log(chalk.gray("       → View identity, bindings, and reputation across all chains"));
+        console.log("");
+        step++;
+    }
+
     console.log(chalk.bold.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
     if (isSolana) {
         console.log(chalk.gray("Learn more: https://8004.org"));

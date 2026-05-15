@@ -171,6 +171,7 @@ export declare const TAP_CONSTANTS: {
     readonly AGENT_REGISTRY: "0x13499d36729467bd5C6B44725a10a0113cE47178";
     readonly REPUTATION_REGISTRY: "0x90B484063622289742516c5dDFdDf1C1A3C2c50C";
     readonly ERC8004_IDENTITY_TESTNET: "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+    readonly ERC8004_IDENTITY_MAINNET: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
     readonly PUSH_CHAIN_RPC: "https://evm.donut.rpc.push.org/";
     readonly PUSH_CHAIN_ID: 42101;
     readonly UEA_FACTORY: "0x00000000000000000000000000000000000000eA";
@@ -185,3 +186,4 @@ export declare const TAP_CONSTANTS: {
 };
 export declare function getTapGateway(chain: string): string | null;
 export declare function isTapSupported(chain: string): boolean;
+export declare function getErc8004Registry(chainKey: string): `0x${string}`;

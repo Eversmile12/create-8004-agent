@@ -19,7 +19,7 @@ export function generateTapRegistrationBlock(
   // No Push Chain tokens needed — uses the gateway on ${chainName}.
 
   const tapPrompt = await askYesNo(
-    'Also create a TAP Universal Agent on Push Chain? (gives you a Universal Agent ID)',
+    'Next: Create a TAP Agent — A Universal Agent ID to support your Agent on Any Chain',
   );
 
   if (tapPrompt) {

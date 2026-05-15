@@ -175,6 +175,7 @@ export const TAP_CONSTANTS = {
     AGENT_REGISTRY: "0x13499d36729467bd5C6B44725a10a0113cE47178",
     REPUTATION_REGISTRY: "0x90B484063622289742516c5dDFdDf1C1A3C2c50C",
     ERC8004_IDENTITY_TESTNET: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    ERC8004_IDENTITY_MAINNET: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     PUSH_CHAIN_RPC: "https://evm.donut.rpc.push.org/",
     PUSH_CHAIN_ID: 42101,
     UEA_FACTORY: "0x00000000000000000000000000000000000000eA",
@@ -192,4 +193,14 @@ export function getTapGateway(chain) {
 }
 export function isTapSupported(chain) {
     return chain in TAP_GATEWAYS;
+}
+const TESTNET_CHAIN_IDS = new Set([
+    11155111, 84532, 43113, 80002, 10143, 324705682,
+]);
+export function getErc8004Registry(chainKey) {
+    const chain = CHAINS[chainKey];
+    if (chain && TESTNET_CHAIN_IDS.has(chain.chainId)) {
+        return TAP_CONSTANTS.ERC8004_IDENTITY_TESTNET;
+    }
+    return TAP_CONSTANTS.ERC8004_IDENTITY_MAINNET;
 }

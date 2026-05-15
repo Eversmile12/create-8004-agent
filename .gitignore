@@ -39,4 +39,5 @@ docs-internal/
 
 # scaffolded agent projects (generated output, may contain .env with keys)
 my-agent/
+my-agent-1/
 test-agent-*/

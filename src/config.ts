@@ -13,7 +13,7 @@ export const CHAINS = {
         rpcUrl: "https://ethereum-rpc.publicnode.com",
         scanPath: "mainnet",
         x402Network: "eip155:1",
-        x402Supported: false, // No facilitator supports Ethereum mainnet
+        x402Supported: false,
         x402Providers: [] as X402Provider[],
         x402DefaultProvider: null as X402Provider | null,
         facilitatorUrl: null,
@@ -37,7 +37,9 @@ export const CHAINS = {
         rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
         scanPath: "avalanche",
         x402Network: "eip155:43114",
-        x402Supported: false, // PayAI facilitator doesn't support Avalanche yet
+        x402Supported: false,
+        x402Providers: [] as X402Provider[],
+        x402DefaultProvider: null as X402Provider | null,
         facilitatorUrl: null,
         usdcAddress: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", // Native USDC
         usdcName: "USD Coin",
@@ -78,6 +80,8 @@ export const CHAINS = {
         scanPath: "skale-base",
         x402Network: "eip155:1187947933",
         x402Supported: true,
+        x402Providers: ["payai"] as X402Provider[],
+        x402DefaultProvider: "payai" as X402Provider | null,
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: "0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20", // Bridged USDC on SKALE Base
         usdcName: "Bridged USDC (SKALE Bridge)",
@@ -116,6 +120,8 @@ export const CHAINS = {
         scanPath: "avalanche-fuji",
         x402Network: "eip155:43113",
         x402Supported: false,
+        x402Providers: [] as X402Provider[],
+        x402DefaultProvider: null as X402Provider | null,
         facilitatorUrl: null,
         usdcAddress: "0x5425890298aed601595a70AB815c96711a31Bc65", // Circle testnet USDC
         usdcName: "USDC",
@@ -156,6 +162,8 @@ export const CHAINS = {
         scanPath: "skale-base-sepolia",
         x402Network: "eip155:324705682",
         x402Supported: true,
+        x402Providers: ["payai"] as X402Provider[],
+        x402DefaultProvider: "payai" as X402Provider | null,
         facilitatorUrl: "https://facilitator.payai.network",
         usdcAddress: "0x2e08028E3C4c2356572E096d8EF835cD5C6030bD", // Bridged USDC on SKALE Base Sepolia
         usdcName: "Bridged USDC (SKALE Bridge)",
@@ -168,3 +176,51 @@ export type ChainKey = keyof typeof CHAINS;
 
 export const TRUST_MODELS = ["reputation", "crypto-economic", "tee-attestation"] as const;
 export type TrustModel = (typeof TRUST_MODELS)[number];
+
+// ============ TAP (Trustless Agents Plus) ============
+// Universal Gateway addresses on source chains for Push Chain registration
+
+export const TAP_GATEWAYS: Partial<Record<ChainKey, string>> = {
+    "eth-sepolia": "0x05bD7a3D18324c1F7e216f7fBF2b15985aE5281A",
+    "base-sepolia": "0xFD4fef1F43aFEc8b5bcdEEc47f35a1431479aC16",
+};
+
+export const TAP_CONSTANTS = {
+    AGENT_REGISTRY: "0xa2B09263a7a41567D5F53b7d9F7CA1c6cc046CE2",
+    REPUTATION_REGISTRY: "0x591A56D98A14e8A88722F794981F00CabB328a91",
+    ERC8004_IDENTITY_TESTNET: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    ERC8004_IDENTITY_MAINNET: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    PUSH_CHAIN_RPC: "https://evm.donut.rpc.push.org/",
+    PUSH_CHAIN_ID: 42101,
+    UEA_FACTORY: "0x00000000000000000000000000000000000000eA",
+    GAS_LIMIT: "100000000",
+    MAX_FEE_PER_GAS: "10000000000",
+    MAX_PRIORITY_FEE: "0",
+    NONCE: "0",
+    DEADLINE: "9999999999",
+    BIND_DEADLINE: "9999999999",
+    V_TYPE: 1,
+    IPFS_GATEWAY: "https://gateway.pinata.cloud/ipfs/",
+} as const;
+
+export function getTapGateway(chain: string): string | null {
+    return TAP_GATEWAYS[chain as ChainKey] ?? null;
+}
+
+export function isTapSupported(chain: string): boolean {
+    return chain in TAP_GATEWAYS;
+}
+
+const TESTNET_CHAIN_IDS = new Set([
+    11155111, 84532, 43113, 80002, 10143, 324705682,
+]);
+
+export function getErc8004Registry(
+    chainKey: string,
+): `0x${string}` {
+    const chain = CHAINS[chainKey as ChainKey];
+    if (chain && TESTNET_CHAIN_IDS.has(chain.chainId)) {
+        return TAP_CONSTANTS.ERC8004_IDENTITY_TESTNET as `0x${string}`;
+    }
+    return TAP_CONSTANTS.ERC8004_IDENTITY_MAINNET as `0x${string}`;
+}
